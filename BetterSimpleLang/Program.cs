@@ -65,10 +65,10 @@ namespace BetterSimpleLang
         };
     }
 
-    public class TokenComparer : IComparer<KeyValuePair<Token, int>>
+    public class TokenComparer : IComparer<KeyValuePair<Token, int[]>>
     {
-        public int Compare([AllowNull] KeyValuePair<Token, int> x, [AllowNull] KeyValuePair<Token, int> y) =>
-            Token.OperatorsPriority[y.Key.kind] - Token.OperatorsPriority[x.Key.kind];
+        public int Compare([AllowNull] KeyValuePair<Token, int[]> x, [AllowNull] KeyValuePair<Token, int[]> y) =>
+            (Token.OperatorsPriority[y.Key.kind] + y.Value[1]) - (Token.OperatorsPriority[x.Key.kind] + x.Value[1]);
     }
 
     public class Expression
@@ -233,19 +233,31 @@ namespace BetterSimpleLang
         public Expression Parse(Token[] tokens)
         {
             bool[] is_token_used = new bool[tokens.Length];
-            List<KeyValuePair<Token, int>> sign_tokens = new List<KeyValuePair<Token, int>>();
+            // Token, { index, add_value };
+            List<KeyValuePair<Token, int[]>> sign_tokens = new List<KeyValuePair<Token, int[]>>();
+            int add = 0;
             for(int i = 0; i < tokens.Length; i++)
             {
-                if ( Token.OperatorsTokenKinds.Contains(tokens[i].kind))
-                    sign_tokens.Add(new KeyValuePair<Token, int>(tokens[i], i));
+                if (tokens[i].kind == TokenKind.OpenParenthesis)
+                {
+                    add++;
+                    is_token_used[i] = true;
+                }
+                if (tokens[i].kind == TokenKind.CloseParenthesis)
+                {
+                    add--;
+                    is_token_used[i] = true;
+                }
+
+                if (Token.OperatorsTokenKinds.Contains(tokens[i].kind))
+                    sign_tokens.Add(new KeyValuePair<Token, int[]>(tokens[i], new int[2] { i, add }));
             }
             sign_tokens.Sort(new TokenComparer());
             Expression[] expressions = new Expression[tokens.Length];
 
-
             for (int i = 0; i < sign_tokens.Count; i++)
             {
-                int ind = sign_tokens[i].Value;
+                int ind = sign_tokens[i].Value[0];
                 Expression expr = new Expression();
                 expr.Operator = tokens[ind];
                 int k = 0;
@@ -272,7 +284,7 @@ namespace BetterSimpleLang
                 expressions[ind] = expr;
             }
 
-            return expressions[sign_tokens[sign_tokens.Count - 1].Value];
+            return expressions[sign_tokens[sign_tokens.Count - 1].Value[0]];
         }
     }
 
@@ -317,7 +329,7 @@ namespace BetterSimpleLang
             //string input = "func test (int: a, int: b) {" +
             //               "return a + b;" +
             //               "} :: int;";
-            string input = "1 + 2 * 6 / 3";
+            string input = "((1 + 2) * 6) / 2";
             var tokens = lexer.GetTokens(input);
             //foreach (Token t in tokens)
             //{
