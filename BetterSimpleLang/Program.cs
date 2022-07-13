@@ -71,13 +71,25 @@ namespace BetterSimpleLang
             (Token.OperatorsPriority[y.Key.kind] + y.Value[1]) - (Token.OperatorsPriority[x.Key.kind] + x.Value[1]);
     }
 
-    public class Expression
+    public enum ExpressionKind
     {
-        public Expression Left;
+        Calc,
+    }
+
+    public interface IExpression
+    {
+        public ExpressionKind Kind();
+    }
+
+    public class CalcExpression : IExpression
+    {
+        public CalcExpression Left;
         public Token Operator;
-        public Expression Right;
+        public CalcExpression Right;
 
         public Token Value;
+
+        public ExpressionKind Kind() => ExpressionKind.Calc;
     }
 
     public class Value
@@ -230,7 +242,28 @@ namespace BetterSimpleLang
 
     public class Parser
     {
-        public Expression Parse(Token[] tokens)
+        public IExpression[] Parse(Token[] tokens)
+        {
+            List<IExpression> exprs = new List<IExpression>();
+
+            List<Token> ts = new List<Token>();
+            foreach(var t in tokens)
+            {
+                if (t.kind == TokenKind.Semicolon)
+                {
+                    exprs.Add(ParseCalcExpression(ts.ToArray()));
+                    ts.Clear();
+                }
+                else
+                {
+                    ts.Add(t);
+                }
+            }
+
+            return exprs.ToArray();
+        }
+
+        public CalcExpression ParseCalcExpression(Token[] tokens)
         {
             bool[] is_token_used = new bool[tokens.Length];
             // Token, { index, add_value };
@@ -253,12 +286,12 @@ namespace BetterSimpleLang
                     sign_tokens.Add(new KeyValuePair<Token, int[]>(tokens[i], new int[2] { i, add }));
             }
             sign_tokens.Sort(new TokenComparer());
-            Expression[] expressions = new Expression[tokens.Length];
+            CalcExpression[] expressions = new CalcExpression[tokens.Length];
 
             for (int i = 0; i < sign_tokens.Count; i++)
             {
                 int ind = sign_tokens[i].Value[0];
-                Expression expr = new Expression();
+                CalcExpression expr = new CalcExpression();
                 expr.Operator = tokens[ind];
                 int k = 0;
                 while (is_token_used.Length > ind + k + 1 && is_token_used[ind + k + 1])
@@ -267,7 +300,7 @@ namespace BetterSimpleLang
                 if (Token.OperatorsTokenKinds.Contains(t.kind))
                     expr.Right = expressions[ind + k + 1];
                 else
-                    expr.Right = new Expression() { Value = t };
+                    expr.Right = new CalcExpression() { Value = t };
                 is_token_used[ind + k + 1] = true;
                 
                 k = 0;
@@ -278,7 +311,7 @@ namespace BetterSimpleLang
                 if (Token.OperatorsTokenKinds.Contains(t.kind))
                     expr.Left = expressions[ind - k - 1];
                 else
-                    expr.Left = new Expression() { Value = t };
+                    expr.Left = new CalcExpression() { Value = t };
                 is_token_used[ind - k - 1] = true;
 
                 expressions[ind] = expr;
@@ -290,7 +323,19 @@ namespace BetterSimpleLang
 
     public class Evaluator
     {
-        public Value Evaluate(Expression expr)
+        public Value Evaluate(IExpression expr)
+        {
+            switch (expr.Kind())
+            {
+                case ExpressionKind.Calc:
+                    return EvaluateCalcExpression((CalcExpression)expr);
+                    break;
+                default:
+                    throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
+            }
+        }
+
+        public Value EvaluateCalcExpression(CalcExpression expr)
         {
             if (expr.Value != null)
             {
@@ -314,7 +359,7 @@ namespace BetterSimpleLang
                 case TokenKind.Slash:
                     return new Value() { type = typeof(int), value = (int)left.value / (int)right.value };
             }
-            
+
             return new Value();
         }
     }
@@ -329,7 +374,7 @@ namespace BetterSimpleLang
             //string input = "func test (int: a, int: b) {" +
             //               "return a + b;" +
             //               "} :: int;";
-            string input = "((1 + 2) * 6) / 2";
+            string input = "((1 + 2) * 6) / 2;";
             var tokens = lexer.GetTokens(input);
             //foreach (Token t in tokens)
             //{
@@ -339,10 +384,10 @@ namespace BetterSimpleLang
             //}
 
             Parser parser = new Parser();
-            Expression e = parser.Parse(tokens);
+            IExpression[] e = parser.Parse(tokens);
 
             Evaluator evaluator = new Evaluator();
-            Value res = evaluator.Evaluate(e);
+            Value res = evaluator.Evaluate(e[0]);
 
             Console.WriteLine(res.value);
         }
