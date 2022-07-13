@@ -31,7 +31,6 @@ namespace BetterSimpleLang
         CloseSquareBracket,
     }
 
-
     public class Token
     {
         public TokenKind kind;
@@ -74,6 +73,8 @@ namespace BetterSimpleLang
     public enum ExpressionKind
     {
         Calc,
+        VarDeclaration,
+        VarSet,
     }
 
     public interface IExpression
@@ -92,11 +93,87 @@ namespace BetterSimpleLang
         public ExpressionKind Kind() => ExpressionKind.Calc;
     }
 
-    public class Value
+    public class VarDeclarationExpression : IExpression
     {
-        public Type type;
-        public object value;
+
+        public Token Name;
+        public Token Type;
+
+        public ExpressionKind Kind() => ExpressionKind.VarDeclaration;
     }
+
+    public class VarSetExpression : IExpression
+    {
+
+        public Token Name;
+        public Token Value;
+
+        public ExpressionKind Kind() => ExpressionKind.VarSet;
+    }
+
+    public interface IType
+    {
+        public static IType Type;
+    }
+
+    public interface IType<T> : IType
+    {
+        //public T GetValue();
+        //public bool SetValue(object v);
+        //public static T ParseValue(object v) => default(T);
+        //public static T DefaultValue() => default(T);
+    }
+
+    public class Null : IType<object>
+    {
+        public static Null Type = new Null();
+
+        public static object DefaultValue() => null;
+
+        public static object ParseValue(object v) => null;
+    }
+
+    public class Integer : IType<int>
+    {
+        public static Integer Type = new Integer();
+
+        public static int ParseValue(object v)
+        {
+            try
+            {
+                return (int)v;
+            }
+            catch
+            {
+                try
+                {
+                    return int.Parse((string)v);
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public static int DefaultValue() => 0;
+    }
+
+    //public class Value<T>
+    //{
+    //    public IType<T> Type;
+    //    //private object _data;
+
+    //    public Value(IType type)
+    //    {
+    //        Type = type;
+    //        Type.SetValue(Type.DefaultValue());
+    //    }
+    //    public Value(IType type, object data)
+    //    {
+
+    //    }
+    //}
 
     public class Lexer
     {
@@ -240,26 +317,81 @@ namespace BetterSimpleLang
         }
     }
 
+    public class Iterator<T>
+    {
+        private T _NULL;
+        private T[] _data;
+        private int _index = -1;
+
+        public Iterator (T[] data, T NULL)
+        {
+            _data = data;
+            _NULL = NULL;
+        }
+
+        public T Current()
+        {
+            if (_index >= 0 && _index < _data.Length)
+                return _data[_index];
+            return _NULL;
+        }
+
+        public T Next()
+        {
+            if (_index < _data.Length - 1)
+            {
+                _index++;
+                return Current();
+            }
+            return _NULL;
+        }
+
+        public T LookNext()
+        {
+            if (_index < _data.Length - 1)
+            {
+                _index++;
+                return _data[_index + 1];
+            }
+            return _NULL;
+        }
+    }
+
     public class Parser
     {
         public IExpression[] Parse(Token[] tokens)
         {
             List<IExpression> exprs = new List<IExpression>();
 
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+
             List<Token> ts = new List<Token>();
-            foreach(var t in tokens)
+            while (it.Next() != null)
             {
-                if (t.kind == TokenKind.Semicolon)
+                if (it.Current().kind == TokenKind.Semicolon)
                 {
-                    exprs.Add(ParseCalcExpression(ts.ToArray()));
+                    IExpression expr;
+                    switch (ts[0])
+                    {
+                        case var t when ts[0].text == "var":
+                            expr = ParseVarDeclarationExpression(ts.ToArray());
+                            break;
+                        case var t when ts[0].kind == TokenKind.Name && ts[1].kind == TokenKind.Equals:
+                            expr = ParseVarSetExpression(ts.ToArray());
+                            break;
+                        default:
+                            expr = ParseCalcExpression(ts.ToArray());
+                            break;
+                    }
+                    exprs.Add(expr);
                     ts.Clear();
                 }
                 else
                 {
-                    ts.Add(t);
+                    ts.Add(it.Current());
                 }
             }
-
+            
             return exprs.ToArray();
         }
 
@@ -319,48 +451,151 @@ namespace BetterSimpleLang
 
             return expressions[sign_tokens[sign_tokens.Count - 1].Value[0]];
         }
+
+        public VarDeclarationExpression ParseVarDeclarationExpression(Token[] tokens)
+        {
+            return new VarDeclarationExpression() { Name = tokens[1], Type = tokens[3] };
+        }
+
+        public VarSetExpression ParseVarSetExpression(Token[] tokens)
+        {
+            return new VarSetExpression() { Name = tokens[0], Value = tokens[2] };
+        }
     }
 
     public class Evaluator
     {
-        public Value Evaluate(IExpression expr)
+        public Variable Evaluate(IExpression expr, Env env)
         {
             switch (expr.Kind())
             {
                 case ExpressionKind.Calc:
-                    return EvaluateCalcExpression((CalcExpression)expr);
-                    break;
+                    return EvaluateCalcExpression((CalcExpression)expr, env);
+                case ExpressionKind.VarDeclaration:
+                    return EvaluateVarDeclarationExpression((VarDeclarationExpression)expr, env);
+                case ExpressionKind.VarSet:
+                    return EvaluateVarSetExpression((VarSetExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
         }
 
-        public Value EvaluateCalcExpression(CalcExpression expr)
+        public Variable EvaluateCalcExpression(CalcExpression expr, Env env)
         {
+
+            bool is_str_digits(string s)
+            {
+                foreach(var c in s)
+                {
+                    if (!char.IsDigit(c)) return false;
+                }
+                return true;
+            }
+
             if (expr.Value != null)
             {
-                return new Value() { type = typeof(int), value = int.Parse(expr.Value.text) };
+                if (is_str_digits(expr.Value.text))
+                    return new Variable("", Integer.Type, expr.Value.text);
+
+                Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Value.text);
+                if (v == null)
+                    return Variable.NewEmpty();
+
+                return v;
             }
 
             TokenKind op_kind = expr.Operator.kind;
-            Value left = Evaluate(expr.Left);
-            Value right = Evaluate(expr.Right);
+            Variable left = Evaluate(expr.Left, env);
+            Variable right = Evaluate(expr.Right, env);
 
-            // TODO: type checking for operations;
+            if (left.Type != Integer.Type || right.Type !=  Integer.Type)
+            {
+                return new Variable("", Null.Type);
+            }
+
+            // TODO: type checking for operations
 
             switch (op_kind)
             {
                 case TokenKind.Plus:
-                    return new Value() { type = typeof(int), value = (int)left.value + (int)right.value };
+                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) + Integer.ParseValue(right.Value));
                 case TokenKind.Minus:
-                    return new Value() { type = typeof(int), value = (int)left.value - (int)right.value };
+                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) - Integer.ParseValue(right.Value));
                 case TokenKind.Star:
-                    return new Value() { type = typeof(int), value = (int)left.value * (int)right.value };
+                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) * Integer.ParseValue(right.Value));
                 case TokenKind.Slash:
-                    return new Value() { type = typeof(int), value = (int)left.value / (int)right.value };
+                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) / Integer.ParseValue(right.Value));
             }
 
-            return new Value();
+            return new Variable("", Null.Type);
+        }
+
+        public Variable EvaluateVarDeclarationExpression(VarDeclarationExpression expr, Env env)
+        {
+            if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            {
+                IType t = Null.Type;
+                switch (expr.Type.text)
+                {
+                    case "int":
+                        t = Integer.Type;
+                        break;
+                }
+                env.Variables.Add(new Variable(expr.Name.text, t));
+            }
+
+            return Variable.NewEmpty();
+        }
+
+        public Variable EvaluateVarSetExpression(VarSetExpression expr, Env env)
+        {
+            if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) != null)
+            {
+                Variable v = env.Variables.First(a => a.Name == expr.Name.text);
+                if (v.Type == Integer.Type)
+                {
+                    v.Value = Integer.ParseValue(expr.Value.text);
+                }
+            }
+
+            return Variable.NewEmpty();
+        }
+    }
+
+    public class Variable
+    {
+        public string Name;
+        public IType Type;
+        public object Value;
+
+        public Variable(string name, IType type)
+        {
+            Name = name;
+            Type = type;
+        }
+
+        public Variable(string name, IType type, object value)
+        {
+            Name = name;
+            Type = type;
+            Value = value;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} => {Type} : '{Value}'";
+        }
+
+        public static Variable NewEmpty() => new Variable("", Null.Type);
+    }
+
+    public class Env
+    {
+        public List<Variable> Variables;
+
+        public Env()
+        {
+            Variables = new List<Variable>();
         }
     }
 
@@ -370,11 +605,15 @@ namespace BetterSimpleLang
         static void Main(string[] args)
         {
 
+            Env env = new Env();
+
             Lexer lexer = new Lexer();
             //string input = "func test (int: a, int: b) {" +
             //               "return a + b;" +
             //               "} :: int;";
-            string input = "((1 + 2) * 6) / 2;";
+            //string input = "((1 + 2) * 6) / 2;";
+            string input = "var a :: int; a = 2; a + 5;";
+            //string input = "1 + 3;";
             var tokens = lexer.GetTokens(input);
             //foreach (Token t in tokens)
             //{
@@ -384,12 +623,26 @@ namespace BetterSimpleLang
             //}
 
             Parser parser = new Parser();
-            IExpression[] e = parser.Parse(tokens);
+            IExpression[] exprs = parser.Parse(tokens);
 
             Evaluator evaluator = new Evaluator();
-            Value res = evaluator.Evaluate(e[0]);
+            //Variable res = evaluator.Evaluate(e[0], env);
 
-            Console.WriteLine(res.value);
+            foreach (var e in exprs)
+            {
+                Console.Write(e.Kind());
+                Console.Write("> ");
+                var r = evaluator.Evaluate(e, env);
+                Console.WriteLine(r.Value);
+            }
+
+            //Console.WriteLine(res.Value);
+
+            foreach(var v in env.Variables)
+            {
+                Console.WriteLine(v);
+            }
+
         }
     }
 }
