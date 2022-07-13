@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 
 namespace BetterSimpleLang
@@ -29,6 +30,8 @@ namespace BetterSimpleLang
         CloseCurlyBracket,
         OpenSquareBracket,
         CloseSquareBracket,
+
+        Dollar
     }
 
     public class Token
@@ -75,6 +78,10 @@ namespace BetterSimpleLang
         Calc,
         VarDeclaration,
         VarSet,
+        FuncDeclaration,
+        FuncArg,
+        Return,
+        FuncExecution
     }
 
     public interface IExpression
@@ -106,9 +113,35 @@ namespace BetterSimpleLang
     {
 
         public Token Name;
-        public Token Value;
+        public IExpression Value;
 
         public ExpressionKind Kind() => ExpressionKind.VarSet;
+    }
+
+    public class FuncArgExpression : IExpression
+    {
+        public Token Type;
+        public Token Name;
+
+        public ExpressionKind Kind() => ExpressionKind.FuncArg;
+    }
+
+    public class FuncDeclarationExpression : IExpression
+    {
+        public Token Name;
+        public FuncArgExpression[] Args;
+        public IExpression[] Body;
+        public Token Type;
+
+        public ExpressionKind Kind() => ExpressionKind.FuncDeclaration;
+    }
+
+    public class FuncExecutionExpression : IExpression
+    {
+        public Token Name;
+        public IExpression[] Args;
+
+        public ExpressionKind Kind() => ExpressionKind.FuncExecution;
     }
 
     public interface IType
@@ -139,6 +172,7 @@ namespace BetterSimpleLang
 
         public static int ParseValue(object v)
         {
+            if (v == null) return 0;
             try
             {
                 return (int)v;
@@ -282,6 +316,10 @@ namespace BetterSimpleLang
                         result.Add(new Token(TokenKind.CloseSquareBracket, "]"));
                         break;
 
+                    case '$':
+                        result.Add(new Token(TokenKind.Dollar, "$"));
+                        break;
+
                     default:
                         if (char.IsWhiteSpace(current()))
                         {
@@ -366,9 +404,17 @@ namespace BetterSimpleLang
             Iterator<Token> it = new Iterator<Token>(tokens, null);
 
             List<Token> ts = new List<Token>();
+
+            bool func = false;
+            int cb = 0;
             while (it.Next() != null)
             {
-                if (it.Current().kind == TokenKind.Semicolon)
+                if (it.Current().text == "func") func = true;
+                if (it.Current().kind == TokenKind.OpenCurlyBracket) cb++;
+                if (it.Current().kind == TokenKind.CloseCurlyBracket) cb--;
+                if (it.Current().kind == TokenKind.Semicolon && func && cb == 0) func = false;
+
+                if (!func && it.Current().kind == TokenKind.Semicolon)
                 {
                     IExpression expr;
                     switch (ts[0])
@@ -378,6 +424,12 @@ namespace BetterSimpleLang
                             break;
                         case var t when ts[0].kind == TokenKind.Name && ts[1].kind == TokenKind.Equals:
                             expr = ParseVarSetExpression(ts.ToArray());
+                            break;
+                        case var t when ts[0].text == "func":
+                            expr = ParseFuncDeclarationExpression(ts.ToArray());
+                            break;
+                        case var t when ts[0].text == "$":
+                            expr = ParseFuncExecutionExpression(ts.ToArray());
                             break;
                         default:
                             expr = ParseCalcExpression(ts.ToArray());
@@ -391,18 +443,31 @@ namespace BetterSimpleLang
                     ts.Add(it.Current());
                 }
             }
+            if (ts.Count > 0)
+            {
+                exprs.Add(ParseCalcExpression(ts.ToArray()));
+            }
             
             return exprs.ToArray();
         }
 
         public CalcExpression ParseCalcExpression(Token[] tokens)
         {
+            if (tokens.Length == 1)
+                return new CalcExpression() { Value = tokens[0] };
+
             bool[] is_token_used = new bool[tokens.Length];
             // Token, { index, add_value };
             List<KeyValuePair<Token, int[]>> sign_tokens = new List<KeyValuePair<Token, int[]>>();
             int add = 0;
+            //bool func = false;
             for(int i = 0; i < tokens.Length; i++)
             {
+                //if (tokens[i].kind == TokenKind.Dollar)
+                //{
+                //    func = true;
+                //}
+
                 if (tokens[i].kind == TokenKind.OpenParenthesis)
                 {
                     add++;
@@ -459,12 +524,127 @@ namespace BetterSimpleLang
 
         public VarSetExpression ParseVarSetExpression(Token[] tokens)
         {
-            return new VarSetExpression() { Name = tokens[0], Value = tokens[2] };
+            if (tokens.Length == 3)
+                return new VarSetExpression() { Name = tokens[0], Value = new CalcExpression() { Value = tokens[2] } };
+
+            List<Token> ts = new List<Token>();
+            for (int i = 2; i < tokens.Length; i++)
+            {
+                ts.Add(tokens[i]);
+            }
+            ts.Add(new Token(TokenKind.Semicolon, ";"));
+            return new VarSetExpression() { Name = tokens[0], Value = Parse(ts.ToArray())[0] };
+        }
+
+        public FuncDeclarationExpression ParseFuncDeclarationExpression(Token[] tokens)
+        {
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+            it.Next();
+            Token name = it.Next();
+
+            List<FuncArgExpression> args_list = new List<FuncArgExpression>();
+
+            bool args = false;
+            bool args_parsed = false;
+
+            bool body = false;
+            bool body_parsed = false;
+
+            List<Token> body_tokens = new List<Token>();
+
+            Token type = null;
+            while(it.Next() != null)
+            {
+                //if (it.Current().kind == TokenKind.OpenParenthesis)
+                switch(it.Current().kind)
+                {
+                    case TokenKind.OpenParenthesis:
+                        args = true;
+                        break;
+                    case TokenKind.CloseParenthesis when args && !args_parsed:
+                        args = false;
+                        args_parsed = true;
+                        break;
+                    case TokenKind.OpenCurlyBracket:
+                        body = true;
+                        break;
+                    case TokenKind.CloseCurlyBracket when body && !body_parsed:
+                        body = false;
+                        body_parsed = true;
+                        break;
+                    case TokenKind.ColonColon:
+                        type = it.Next();
+                        break;
+                    default:
+                        if (args)
+                        {
+                            if (it.Current().kind == TokenKind.Comma) it.Next();
+                            Token n = it.Current();
+                            it.Next();
+                            args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n });
+                        }
+                        if (body)
+                        {
+                            body_tokens.Add(it.Current());
+                        }
+                        break;
+                }
+            }
+
+            return new FuncDeclarationExpression() { Name = name, Type = type, Args = args_list.ToArray(), Body = Parse(body_tokens.ToArray()) };
+        }
+
+        public FuncExecutionExpression ParseFuncExecutionExpression(Token[] tokens)
+        {
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+            it.Next();
+            Token name = it.Next();
+
+            FuncExecutionExpression e = new FuncExecutionExpression();
+            e.Name = name;
+
+            List<IExpression> exprs = new List<IExpression>();
+            List<Token> ts = new List<Token>();
+
+            int open_par = 0;
+            while(it.Next() != null)
+            {
+                if (it.Current().kind == TokenKind.OpenParenthesis)
+                {
+                    open_par++;
+                    continue;
+                }
+                if (it.Current().kind == TokenKind.CloseParenthesis)
+                {
+                    open_par--;
+                    continue;
+                }
+                if (open_par == 1 && it.Current().kind == TokenKind.Comma)
+                {
+                    exprs.Add(Parse(ts.ToArray())[0]);
+                    ts.Clear();
+                    continue;
+                }
+                ts.Add(it.Current());
+            }
+            if (ts.Count > 0)
+            {
+                exprs.Add(Parse(ts.ToArray())[0]);
+                ts.Clear();
+            }
+            e.Args = exprs.ToArray();
+
+            return e;
         }
     }
 
     public class Evaluator
     {
+        private Dictionary<string, IType> _types = new Dictionary<string, IType>()
+        {
+            { "int", Integer.Type },
+        };
+
         public Variable Evaluate(IExpression expr, Env env)
         {
             switch (expr.Kind())
@@ -475,6 +655,12 @@ namespace BetterSimpleLang
                     return EvaluateVarDeclarationExpression((VarDeclarationExpression)expr, env);
                 case ExpressionKind.VarSet:
                     return EvaluateVarSetExpression((VarSetExpression)expr, env);
+                case ExpressionKind.FuncDeclaration:
+                    return EvaluateFuncDeclarationExpression((FuncDeclarationExpression)expr, env);
+                case ExpressionKind.FuncArg:
+                    return EvaluateFuncArgExpression((FuncArgExpression)expr, env);
+                case ExpressionKind.FuncExecution:
+                    return EvaluateFuncExecutionExpression((FuncExecutionExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
@@ -554,12 +740,56 @@ namespace BetterSimpleLang
                 Variable v = env.Variables.First(a => a.Name == expr.Name.text);
                 if (v.Type == Integer.Type)
                 {
-                    v.Value = Integer.ParseValue(expr.Value.text);
+                    v.Value = Integer.ParseValue( Evaluate(expr.Value, env).Value );
                 }
             }
 
             return Variable.NewEmpty();
         }
+
+        public Variable EvaluateFuncDeclarationExpression(FuncDeclarationExpression expr, Env env)
+        {
+            if (env.Functions.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            {
+                List<KeyValuePair<string, IType>> args = new List<KeyValuePair<string, IType>>();
+                foreach(var e in expr.Args)
+                {
+                    Variable arg = Evaluate(e, new Env());
+                    args.Add( new KeyValuePair<string, IType>(arg.Name, arg.Type) );
+                }
+                Function f = new Function(
+                    expr.Name.text,
+                    _types[expr.Type.text],
+                    args.ToArray(),
+                    expr.Body
+                    );
+                env.Functions.Add(f);
+            }
+
+            return Variable.NewEmpty();
+        }
+
+        public Variable EvaluateFuncArgExpression(FuncArgExpression expr, Env env)
+        {
+            return new Variable(expr.Name.text, _types[expr.Type.text]);
+        }
+
+        public Variable EvaluateFuncExecutionExpression(FuncExecutionExpression expr, Env env)
+        {
+            Function f = env.Functions.FirstOrDefault(a => a.Name == expr.Name.text);
+            if (f != null)
+            {
+                List<Variable> vars = new List<Variable>();
+                foreach(var e in expr.Args)
+                {
+                    vars.Add(Evaluate(e, env));
+                }
+                return f.Execute(vars.ToArray());
+            }
+
+            return Variable.NewEmpty();
+        }
+
     }
 
     public class Variable
@@ -589,15 +819,81 @@ namespace BetterSimpleLang
         public static Variable NewEmpty() => new Variable("", Null.Type);
     }
 
+    public class Function
+    {
+        public string Name;
+        public IType Type;
+        public KeyValuePair<string, IType>[] Args;
+        public IExpression[] Body;
+
+        public Function(string name, IType type, KeyValuePair<string, IType>[] args, IExpression[] body)
+        {
+            Name = name;
+            Type = type;
+            Args = args;
+            Body = body;
+        }
+
+        public Variable Execute(Variable[] args)
+        {
+
+            Iterator<Variable> args_it = new Iterator<Variable>(args, null);
+            var n = new KeyValuePair<string, IType>("", Null.Type);
+            Iterator<KeyValuePair<string, IType>> Args_it = new Iterator<KeyValuePair<string, IType>>(Args, n);
+            bool kvp_eq(KeyValuePair<string, IType> a, KeyValuePair<string, IType> b)
+            {
+                return a.Key == b.Key && a.Value == b.Value;
+            }
+            while(!kvp_eq(Args_it.Next(), n))
+            {
+                args_it.Next();
+
+                var A_c = Args_it.Current();
+                var a_c = args_it.Current();
+
+                //if (A_c.Key != a_c.Name || A_c.Value != a_c.Type) throw new Exception();
+                if (A_c.Value != a_c.Type) throw new Exception();
+                a_c.Name = A_c.Key;
+            }
+            if(args_it.Next() != null) throw new Exception();
+
+            Env env = new Env();
+            env.Variables.AddRange(args);
+
+            Evaluator evaluator = new Evaluator();
+
+            object result = null;
+
+            Variable r = Variable.NewEmpty();
+            foreach (var e in Body)
+            {
+                r = evaluator.Evaluate(e, env);
+                if (e.Kind() == ExpressionKind.Return) result = r.Value;
+            }
+
+
+            // Change this to Parse Return Expression
+            if (result == null && r.Value != null)
+                result = r.Value;
+
+            return new Variable("", Type, result);
+        }
+
+    }
+
     public class Env
     {
         public List<Variable> Variables;
+        public List<Function> Functions;
 
         public Env()
         {
             Variables = new List<Variable>();
+            Functions = new List<Function>();
         }
     }
+
+    // TODO: add GetTypeByToken function;
 
     class Program
     {
@@ -608,20 +904,25 @@ namespace BetterSimpleLang
             Env env = new Env();
 
             Lexer lexer = new Lexer();
-            //string input = "func test (int: a, int: b) {" +
-            //               "return a + b;" +
-            //               "} :: int;";
-            //string input = "((1 + 2) * 6) / 2;";
-            string input = "var a :: int; a = 2; a + 5;";
-            //string input = "1 + 3;";
-            var tokens = lexer.GetTokens(input);
-            //foreach (Token t in tokens)
-            //{
-            //    Console.Write(t.kind);
-            //    Console.Write("  ->  ");
-            //    Console.WriteLine(t.text);
-            //}
 
+            //string input = "var a :: int;" +
+            //                "var b :: int;" +
+            //                "" +
+            //                "a = 12;" +
+            //                "b = 3;" +
+            //                "" +
+            //                "a / b + 0;" +
+            //                "";
+
+            string input = "func test (int: a, int: b) {" +
+                                "return a + b;" +
+                            "} :: int;" +
+                            "" +
+                            "var sum :: int;" +
+                            "sum = $test(2, 5) + 3;";
+            //"sum = $test(a, 5) + 3 * 2;";
+
+            var tokens = lexer.GetTokens(input);
             Parser parser = new Parser();
             IExpression[] exprs = parser.Parse(tokens);
 
@@ -638,10 +939,12 @@ namespace BetterSimpleLang
 
             //Console.WriteLine(res.Value);
 
-            foreach(var v in env.Variables)
+            foreach (var v in env.Variables)
             {
                 Console.WriteLine(v);
             }
+
+
 
         }
     }
