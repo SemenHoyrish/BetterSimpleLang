@@ -91,9 +91,9 @@ namespace BetterSimpleLang
 
     public class CalcExpression : IExpression
     {
-        public CalcExpression Left;
+        public IExpression Left;
         public Token Operator;
-        public CalcExpression Right;
+        public IExpression Right;
 
         public Token Value;
 
@@ -428,9 +428,9 @@ namespace BetterSimpleLang
                         case var t when ts[0].text == "func":
                             expr = ParseFuncDeclarationExpression(ts.ToArray());
                             break;
-                        case var t when ts[0].text == "$":
-                            expr = ParseFuncExecutionExpression(ts.ToArray());
-                            break;
+                        //case var t when ts[0].text == "$":
+                        //    expr = ParseFuncExecutionExpression(ts.ToArray());
+                        //    break;
                         default:
                             expr = ParseCalcExpression(ts.ToArray());
                             break;
@@ -456,59 +456,92 @@ namespace BetterSimpleLang
             if (tokens.Length == 1)
                 return new CalcExpression() { Value = tokens[0] };
 
-            bool[] is_token_used = new bool[tokens.Length];
+            List<IExpression> exprs_list = new List<IExpression>();
+
+            bool func = false;
+            int open_par = 0;
+            List<Token> func_ts = new List<Token>();
+            for(int i = 0; i < tokens.Length; i++)
+            {
+                if (tokens[i].kind == TokenKind.Dollar) func = true;
+                if (tokens[i].kind == TokenKind.OpenParenthesis && func) open_par++;
+                if (func)
+                {
+                    func_ts.Add(tokens[i]);
+                }
+                else
+                {
+                    exprs_list.Add(new CalcExpression() { Value = tokens[i] });
+                }
+                if (tokens[i].kind == TokenKind.CloseParenthesis && func && open_par == 1)
+                {
+                    exprs_list.Add(ParseFuncExecutionExpression(func_ts.ToArray()));
+                    func_ts.Clear();
+                    func = false;
+                }
+                if (tokens[i].kind == TokenKind.CloseParenthesis) open_par--;
+                
+            }
+
+            IExpression[] exprs = exprs_list.ToArray();
+
+            bool[] is_token_used = new bool[exprs.Length];
             // Token, { index, add_value };
             List<KeyValuePair<Token, int[]>> sign_tokens = new List<KeyValuePair<Token, int[]>>();
             int add = 0;
             //bool func = false;
-            for(int i = 0; i < tokens.Length; i++)
+            for(int i = 0; i < exprs.Length; i++)
             {
                 //if (tokens[i].kind == TokenKind.Dollar)
                 //{
                 //    func = true;
                 //}
 
-                if (tokens[i].kind == TokenKind.OpenParenthesis)
+                if (exprs[i].Kind() == ExpressionKind.Calc && ((CalcExpression)exprs[i]).Value.kind == TokenKind.OpenParenthesis)
                 {
                     add++;
                     is_token_used[i] = true;
                 }
-                if (tokens[i].kind == TokenKind.CloseParenthesis)
+                if (exprs[i].Kind() == ExpressionKind.Calc && ((CalcExpression)exprs[i]).Value.kind == TokenKind.CloseParenthesis)
                 {
                     add--;
                     is_token_used[i] = true;
                 }
 
-                if (Token.OperatorsTokenKinds.Contains(tokens[i].kind))
-                    sign_tokens.Add(new KeyValuePair<Token, int[]>(tokens[i], new int[2] { i, add }));
+                if (exprs[i].Kind() == ExpressionKind.Calc && Token.OperatorsTokenKinds.Contains(((CalcExpression)exprs[i]).Value.kind))
+                    sign_tokens.Add(new KeyValuePair<Token, int[]>(((CalcExpression)exprs[i]).Value, new int[2] { i, add }));
             }
             sign_tokens.Sort(new TokenComparer());
-            CalcExpression[] expressions = new CalcExpression[tokens.Length];
+            CalcExpression[] expressions = new CalcExpression[exprs.Length];
 
             for (int i = 0; i < sign_tokens.Count; i++)
             {
                 int ind = sign_tokens[i].Value[0];
                 CalcExpression expr = new CalcExpression();
-                expr.Operator = tokens[ind];
+                expr.Operator = ((CalcExpression)exprs[ind]).Value;
                 int k = 0;
                 while (is_token_used.Length > ind + k + 1 && is_token_used[ind + k + 1])
                     k++;
-                Token t = tokens[ind + k + 1];
-                if (Token.OperatorsTokenKinds.Contains(t.kind))
+                IExpression t = exprs[ind + k + 1];
+                if (t.Kind() == ExpressionKind.Calc && Token.OperatorsTokenKinds.Contains(((CalcExpression)t).Value.kind))
                     expr.Right = expressions[ind + k + 1];
+                else if (t.Kind() == ExpressionKind.FuncExecution)
+                    expr.Right = t;
                 else
-                    expr.Right = new CalcExpression() { Value = t };
+                    expr.Right = new CalcExpression() { Value = ((CalcExpression)t).Value };
                 is_token_used[ind + k + 1] = true;
                 
                 k = 0;
                 while (ind - k - 1 > 0 && is_token_used[ind - k - 1])
                     k++;
 
-                t = tokens[ind - k - 1];
-                if (Token.OperatorsTokenKinds.Contains(t.kind))
+                t = exprs[ind - k - 1];
+                if (t.Kind() == ExpressionKind.Calc && Token.OperatorsTokenKinds.Contains(((CalcExpression)t).Value.kind))
                     expr.Left = expressions[ind - k - 1];
+                else if (t.Kind() == ExpressionKind.FuncExecution)
+                    expr.Left = t;
                 else
-                    expr.Left = new CalcExpression() { Value = t };
+                    expr.Left = new CalcExpression() { Value = ((CalcExpression)t).Value };
                 is_token_used[ind - k - 1] = true;
 
                 expressions[ind] = expr;
@@ -919,7 +952,7 @@ namespace BetterSimpleLang
                             "} :: int;" +
                             "" +
                             "var sum :: int;" +
-                            "sum = $test(2, 5) + 3;";
+                            "sum = $test(2, 5) + $test(4, 6);";
             //"sum = $test(a, 5) + 3 * 2;";
 
             var tokens = lexer.GetTokens(input);
