@@ -70,31 +70,61 @@ namespace BetterSimpleLang
             Variable left = Evaluate(expr.Left, env);
             Variable right = Evaluate(expr.Right, env);
 
-            if (left.Type != Integer.Type || right.Type != Integer.Type)
-            {
-                return new Variable("", Null.Type);
-            }
+            IType left_type = left.Type;
+            IType right_type = right.Type;
+
+            //if (left.Type != Integer.Type || right.Type != Integer.Type)
+            //{
+            //    return new Variable("", Null.Type);
+            //}
 
             // TODO: type checking for operations
 
-            switch (op_kind)
+            if (left_type != right_type)
             {
-                case TokenKind.Plus:
-                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) + Integer.ParseValue(right.Value));
-                case TokenKind.Minus:
-                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) - Integer.ParseValue(right.Value));
-                case TokenKind.Star:
-                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) * Integer.ParseValue(right.Value));
-                case TokenKind.Slash:
-                    return new Variable("", Integer.Type, Integer.ParseValue(left.Value) / Integer.ParseValue(right.Value));
-                case TokenKind.EqualsEquals:
-                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) == Integer.ParseValue(right.Value));
-                case TokenKind.Bigger:
-                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) > Integer.ParseValue(right.Value));
-                case TokenKind.Less:
-                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) < Integer.ParseValue(right.Value));
-
+                // TODO: report error
+                throw new Exception();
             }
+
+            if (left_type == Integer.Type)
+                switch (op_kind)
+                {
+                    case TokenKind.Plus:
+                        return new Variable("", Integer.Type, Integer.ParseValue(left.Value) + Integer.ParseValue(right.Value));
+                    case TokenKind.Minus:
+                        return new Variable("", Integer.Type, Integer.ParseValue(left.Value) - Integer.ParseValue(right.Value));
+                    case TokenKind.Star:
+                        return new Variable("", Integer.Type, Integer.ParseValue(left.Value) * Integer.ParseValue(right.Value));
+                    case TokenKind.Slash:
+                        return new Variable("", Integer.Type, Integer.ParseValue(left.Value) / Integer.ParseValue(right.Value));
+                    case TokenKind.EqualsEquals:
+                        return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) == Integer.ParseValue(right.Value));
+                    case TokenKind.Bigger:
+                        return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) > Integer.ParseValue(right.Value));
+                    case TokenKind.Less:
+                        return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) < Integer.ParseValue(right.Value));
+                    default:
+                        // TODO: Report Error
+                        throw new Exception();
+                }
+            else if (left_type == Boolean.Type)
+                switch (op_kind)
+                {
+                    case TokenKind.EqualsEquals:
+                        return new Variable("", Boolean.Type, Boolean.ParseValue(left.Value) == Boolean.ParseValue(right.Value));
+                    default:
+                        // TODO: Report Error
+                        throw new Exception();
+                }
+            else if (left_type == String.Type)
+                switch (op_kind)
+                {
+                    case TokenKind.EqualsEquals:
+                        return new Variable("", Boolean.Type, String.ParseValue(left.Value) == String.ParseValue(right.Value));
+                    default:
+                        // TODO: Report Error
+                        throw new Exception();
+                }
 
             return new Variable("", Null.Type);
         }

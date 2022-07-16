@@ -135,15 +135,9 @@ namespace BetterSimpleLang
                         {
                             string name = "";
                             name += current();
-                            while (look_next() != null)
+                            while (look_next() != null && (char)look_next() != '"')
                             {
                                 name += next();
-                                if (look_next() != null && (char)look_next() == '"')
-                                {
-                                    next();
-                                    str = false;
-                                    break;
-                                }
                             }
                             result.Add(new Token(TokenKind.String, name));
                             break;
