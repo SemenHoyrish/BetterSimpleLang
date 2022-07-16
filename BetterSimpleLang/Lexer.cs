@@ -39,6 +39,9 @@ namespace BetterSimpleLang
                     r = chars[i + 1];
                 return r;
             }
+
+            bool str = false;
+
             while (next() != null)
             {
                 switch (current())
@@ -123,32 +126,56 @@ namespace BetterSimpleLang
                         result.Add(new Token(TokenKind.Dollar, "$"));
                         break;
 
+                    case '"':
+                        str = !str;
+                        break;
+
                     default:
-                        if (char.IsWhiteSpace(current()))
-                        {
-                            break;
-                        }
-                        if (char.IsLetter(current()))
+                        if (str)
                         {
                             string name = "";
                             name += current();
-                            while (look_next() != null && char.IsLetter((char)look_next()))
+                            while (look_next() != null)
                             {
                                 name += next();
+                                if (look_next() != null && (char)look_next() == '"')
+                                {
+                                    next();
+                                    str = false;
+                                    break;
+                                }
                             }
-                            result.Add(new Token(TokenKind.Name, name));
+                            result.Add(new Token(TokenKind.String, name));
                             break;
                         }
-                        if (char.IsDigit(current()))
+                        else
                         {
-                            string number = "";
-                            number += current();
-                            while (look_next() != null && char.IsDigit((char)look_next()))
+                            if (char.IsWhiteSpace(current()))
                             {
-                                number += next();
+                                break;
                             }
-                            result.Add(new Token(TokenKind.Number, number));
-                            break;
+                            if (char.IsLetter(current()))
+                            {
+                                string name = "";
+                                name += current();
+                                while (look_next() != null && char.IsLetter((char)look_next()))
+                                {
+                                    name += next();
+                                }
+                                result.Add(new Token(TokenKind.Name, name));
+                                break;
+                            }
+                            if (char.IsDigit(current()))
+                            {
+                                string number = "";
+                                number += current();
+                                while (look_next() != null && char.IsDigit((char)look_next()))
+                                {
+                                    number += next();
+                                }
+                                result.Add(new Token(TokenKind.Number, number));
+                                break;
+                            }
                         }
                         throw new Exception("Unexpected character '" + current() + "'");
                 }

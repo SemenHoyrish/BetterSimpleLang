@@ -11,6 +11,7 @@ namespace BetterSimpleLang
         {
             { "int", Integer.Type },
             { "bool", Boolean.Type },
+            { "str", String.Type },
         };
 
         public Variable Evaluate(IExpression expr, Env env)
@@ -54,6 +55,9 @@ namespace BetterSimpleLang
             {
                 if (is_str_digits(expr.Value.text))
                     return new Variable("", Integer.Type, expr.Value.text);
+                if (expr.Value.kind == TokenKind.String)
+                    return new Variable("", String.Type, expr.Value.text);
+                    //return new Variable("", String.Type, expr.Value.text.Substring(1, expr.Value.text.Length - 1));
 
                 Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Value.text);
                 if (v == null)
@@ -125,6 +129,10 @@ namespace BetterSimpleLang
                 else if (v.Type == Boolean.Type)
                 {
                     v.Value = Boolean.ParseValue(Evaluate(expr.Value, env).Value);
+                }
+                else if (v.Type == String.Type)
+                {
+                    v.Value = String.ParseValue(Evaluate(expr.Value, env).Value);
                 }
                 return v;
             }

@@ -54,7 +54,7 @@ namespace BetterSimpleLang
 
             Variable r = Variable.NewEmpty();
 
-            if(Name == "print")
+            if(new List<string>() { "printi", "prints", "printb" }.Contains(Name))
             {
                 Console.WriteLine(env.Variables[0].Value);
                 return r;

@@ -84,4 +84,40 @@ namespace BetterSimpleLang
         public static bool DefaultValue() => false;
     }
 
+    public class String : IType<string>
+    {
+        public static String Type = new String();
+
+        public static string ParseValue(object v)
+        {
+            // Report error
+            if (v == null) return "";
+            try
+            {
+                return (string)v;
+            }
+            catch
+            {
+                try
+                {
+                    return ((int)v).ToString();
+                }
+                catch
+                {
+                    try
+                    {
+                        return ((bool)v).ToString();
+                    }
+                    catch
+                    {
+                        // Report error
+                        return "";
+                    }
+                }
+            }
+        }
+
+        public static string DefaultValue() => "";
+    }
+
 }

@@ -9,6 +9,7 @@ namespace BetterSimpleLang
     {
         Name,
         Number,
+        String,
 
         Colon,
         ColonColon,
