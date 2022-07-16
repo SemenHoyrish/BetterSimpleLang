@@ -23,21 +23,7 @@ namespace BetterSimpleLang
     //    }
     //}
 
-    public class Env
-    {
-        public List<Variable> Variables;
-        public List<Function> Functions;
-
-        public Env()
-        {
-            Variables = new List<Variable>();
-            Functions = new List<Function>();
-
-            Functions.Add(new Function("printi", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Integer.Type) }, new IExpression[0]));
-            Functions.Add(new Function("prints", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", String.Type) }, new IExpression[0]));
-            Functions.Add(new Function("printb", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Boolean.Type) }, new IExpression[0]));
-        }
-    }
+    
 
     // TODO: add GetTypeByToken function;
 
@@ -68,8 +54,9 @@ namespace BetterSimpleLang
             //                "sum = $test(2, 5) + $test(4, 6);";
             //"sum = $test(a, 5) + 3 * 2;";
 
-
-            const string FILENAME = "test.bsl";
+            string FILENAME = "test.bsl";
+            if (args.Length == 1)
+                FILENAME = args[0];
 
             //string input = File.ReadAllText(FILENAME);
             string input = "";

@@ -56,8 +56,27 @@ namespace BetterSimpleLang
 
             if(new List<string>() { "printi", "prints", "printb" }.Contains(Name))
             {
-                Console.WriteLine(env.Variables[0].Value);
+                Console.Write( env.Variables[0].Value.ToString().Replace("\\n", "\n") );
                 return r;
+            }
+
+            if (Name == "readi")
+            {
+                string s = Console.ReadLine();
+                int i = 0;
+                if (int.TryParse(s, out i))
+                {
+                    return new Variable("", Integer.Type, i);
+                }
+                else
+                {
+                    return r;
+                }
+            }
+            if (Name == "reads")
+            {
+                string s = Console.ReadLine();
+                return new Variable("", String.Type, s);
             }
 
             foreach (var e in Body)

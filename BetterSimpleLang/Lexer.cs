@@ -44,106 +44,104 @@ namespace BetterSimpleLang
 
             while (next() != null)
             {
-                switch (current())
+                if (current() == '"')
                 {
-                    case ':':
-                        if (look_next() == ':')
-                        {
-                            next();
-                            result.Add(new Token(TokenKind.ColonColon, "::"));
-                        }
-                        else
-                            result.Add(new Token(TokenKind.Colon, ":"));
-                        break;
-
-                    case ';':
-                        result.Add(new Token(TokenKind.Semicolon, ";"));
-                        break;
-
-                    case '+':
-                        result.Add(new Token(TokenKind.Plus, "+"));
-                        break;
-
-                    case '-':
-                        result.Add(new Token(TokenKind.Minus, "-"));
-                        break;
-
-                    case '*':
-                        result.Add(new Token(TokenKind.Star, "*"));
-                        break;
-
-                    case '/':
-                        result.Add(new Token(TokenKind.Slash, "/"));
-                        break;
-
-                    case '=':
-                        if (look_next() == '=')
-                        {
-                            next();
-                            result.Add(new Token(TokenKind.EqualsEquals, "=="));
-                        }
-                        else
-                            result.Add(new Token(TokenKind.Equals, "="));
-                        break;
-
-                    case '>':
-                        result.Add(new Token(TokenKind.Bigger, ">"));
-                        break;
-
-                    case '<':
-                        result.Add(new Token(TokenKind.Less, "<"));
-                        break;
-
-                    case ',':
-                        result.Add(new Token(TokenKind.Comma, ","));
-                        break;
-
-                    case '(':
-                        result.Add(new Token(TokenKind.OpenParenthesis, "("));
-                        break;
-
-                    case ')':
-                        result.Add(new Token(TokenKind.CloseParenthesis, ")"));
-                        break;
-
-                    case '{':
-                        result.Add(new Token(TokenKind.OpenCurlyBracket, "{"));
-                        break;
-
-                    case '}':
-                        result.Add(new Token(TokenKind.CloseCurlyBracket, "}"));
-                        break;
-
-                    case '[':
-                        result.Add(new Token(TokenKind.OpenSquareBracket, "["));
-                        break;
-
-                    case ']':
-                        result.Add(new Token(TokenKind.CloseSquareBracket, "]"));
-                        break;
-
-                    case '$':
-                        result.Add(new Token(TokenKind.Dollar, "$"));
-                        break;
-
-                    case '"':
-                        str = !str;
-                        break;
-
-                    default:
-                        if (str)
-                        {
-                            string name = "";
-                            name += current();
-                            while (look_next() != null && (char)look_next() != '"')
+                    str = !str;
+                }
+                else if (str)
+                {
+                    string name = "";
+                    name += current();
+                    while (look_next() != null && (char)look_next() != '"')
+                    {
+                        name += next();
+                    }
+                    result.Add(new Token(TokenKind.String, name));
+                }
+                else {
+                    switch (current())
+                    {
+                        case ':':
+                            if (look_next() == ':')
                             {
-                                name += next();
+                                next();
+                                result.Add(new Token(TokenKind.ColonColon, "::"));
                             }
-                            result.Add(new Token(TokenKind.String, name));
+                            else
+                                result.Add(new Token(TokenKind.Colon, ":"));
                             break;
-                        }
-                        else
-                        {
+
+                        case ';':
+                            result.Add(new Token(TokenKind.Semicolon, ";"));
+                            break;
+
+                        case '+':
+                            result.Add(new Token(TokenKind.Plus, "+"));
+                            break;
+
+                        case '-':
+                            result.Add(new Token(TokenKind.Minus, "-"));
+                            break;
+
+                        case '*':
+                            result.Add(new Token(TokenKind.Star, "*"));
+                            break;
+
+                        case '/':
+                            result.Add(new Token(TokenKind.Slash, "/"));
+                            break;
+
+                        case '=':
+                            if (look_next() == '=')
+                            {
+                                next();
+                                result.Add(new Token(TokenKind.EqualsEquals, "=="));
+                            }
+                            else
+                                result.Add(new Token(TokenKind.Equals, "="));
+                            break;
+
+                        case '>':
+                            result.Add(new Token(TokenKind.Bigger, ">"));
+                            break;
+
+                        case '<':
+                            result.Add(new Token(TokenKind.Less, "<"));
+                            break;
+
+                        case ',':
+                            result.Add(new Token(TokenKind.Comma, ","));
+                            break;
+
+                        case '(':
+                            result.Add(new Token(TokenKind.OpenParenthesis, "("));
+                            break;
+
+                        case ')':
+                            result.Add(new Token(TokenKind.CloseParenthesis, ")"));
+                            break;
+
+                        case '{':
+                            result.Add(new Token(TokenKind.OpenCurlyBracket, "{"));
+                            break;
+
+                        case '}':
+                            result.Add(new Token(TokenKind.CloseCurlyBracket, "}"));
+                            break;
+
+                        case '[':
+                            result.Add(new Token(TokenKind.OpenSquareBracket, "["));
+                            break;
+
+                        case ']':
+                            result.Add(new Token(TokenKind.CloseSquareBracket, "]"));
+                            break;
+
+                        case '$':
+                            result.Add(new Token(TokenKind.Dollar, "$"));
+                            break;
+
+                        default:
                             if (char.IsWhiteSpace(current()))
                             {
                                 break;
@@ -170,8 +168,8 @@ namespace BetterSimpleLang
                                 result.Add(new Token(TokenKind.Number, number));
                                 break;
                             }
-                        }
-                        throw new Exception("Unexpected character '" + current() + "'");
+                            throw new Exception("Unexpected character '" + current() + "'");
+                    }
                 }
             }
 
