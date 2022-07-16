@@ -19,8 +19,11 @@ namespace BetterSimpleLang
             Body = body;
         }
 
-        public Variable Execute(Variable[] args)
+        public Variable Execute(Variable[] _args)
         {
+            Variable[] args = new Variable[_args.Length];
+            for(int i = 0; i < _args.Length; i++)
+                args[i] = _args[i].Copy();
 
             Iterator<Variable> args_it = new Iterator<Variable>(args, null);
             var n = new KeyValuePair<string, IType>("", Null.Type);

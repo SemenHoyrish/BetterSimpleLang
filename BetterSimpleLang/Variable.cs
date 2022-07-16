@@ -28,6 +28,8 @@ namespace BetterSimpleLang
             return $"{Name} => {Type} : '{Value}'";
         }
 
+        public Variable Copy() => new Variable(Name, Type, Value);
+
         public static Variable NewEmpty() => new Variable("", Null.Type);
     }
 }

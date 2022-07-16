@@ -437,9 +437,76 @@ namespace BetterSimpleLang
 
         public LoopExpression ParseLoopExpression(Token[] tokens)
         {
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+            it.Next();
 
+            bool condition_parsed = false;
+            int open_par = 0;
 
-            return null;
+            List<Token> condition = new List<Token>();
+            IExpression condition_expr = null;
+
+            bool body_parsed = false;
+            int open_cur = 0;
+
+            List<Token> body = new List<Token>();
+            IExpression[] body_exprs = null;
+
+            while (it.Next() != null)
+            {
+                if (!condition_parsed)
+                {
+                    if (it.Current().kind == TokenKind.OpenParenthesis) open_par++;
+                    else if (it.Current().kind == TokenKind.CloseParenthesis)
+                    {
+                        if (open_par == 1)
+                        {
+                            condition_parsed = true;
+                            condition_expr = Parse(condition.ToArray())[0];
+                        }
+                        open_par--;
+                    }
+                    else
+                    {
+                        condition.Add(it.Current());
+                    }
+                }
+                else
+                {
+                    if (it.Current().kind == TokenKind.OpenCurlyBracket)
+                    {
+                        if (open_cur > 0)
+                        {
+                            body.Add(it.Current());
+                        }
+                        open_cur++;
+                    }
+                    else if (it.Current().kind == TokenKind.CloseCurlyBracket)
+                    {
+                        if (open_cur == 1)
+                        {
+                            body_parsed = true;
+                            body_exprs = Parse(body.ToArray());
+                        }
+                        else
+                        {
+                            body.Add(it.Current());
+                        }
+                        open_cur--;
+                    }
+                    else
+                    {
+                        body.Add(it.Current());
+                    }
+                }
+            }
+
+            if (condition == null || body_exprs == null)
+            {
+                // TODO: Report Error
+            }
+
+            return new LoopExpression() { Condition = condition_expr, Body = body_exprs };
         }
     }
 }

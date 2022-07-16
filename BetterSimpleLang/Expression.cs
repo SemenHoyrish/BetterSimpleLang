@@ -88,6 +88,8 @@ namespace BetterSimpleLang
 
     public class LoopExpression : IExpression
     {
+        public IExpression Condition;
+        public IExpression[] Body;
 
         public ExpressionKind Kind() => ExpressionKind.Loop;
     }

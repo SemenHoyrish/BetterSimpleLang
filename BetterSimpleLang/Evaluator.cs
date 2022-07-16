@@ -31,6 +31,8 @@ namespace BetterSimpleLang
                     return EvaluateFuncExecutionExpression((FuncExecutionExpression)expr, env);
                 case ExpressionKind.If:
                     return EvaluateIfExpression((IfExpression)expr, env);
+                case ExpressionKind.Loop:
+                    return EvaluateLoopExpression((LoopExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
@@ -113,9 +115,9 @@ namespace BetterSimpleLang
 
         public Variable EvaluateVarSetExpression(VarSetExpression expr, Env env)
         {
-            if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) != null)
+            Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Name.text);
+            if (v != null)
             {
-                Variable v = env.Variables.First(a => a.Name == expr.Name.text);
                 if (v.Type == Integer.Type)
                 {
                     v.Value = Integer.ParseValue(Evaluate(expr.Value, env).Value);
@@ -124,8 +126,8 @@ namespace BetterSimpleLang
                 {
                     v.Value = Boolean.ParseValue(Evaluate(expr.Value, env).Value);
                 }
+                return v;
             }
-
             return Variable.NewEmpty();
         }
 
@@ -136,7 +138,7 @@ namespace BetterSimpleLang
                 List<KeyValuePair<string, IType>> args = new List<KeyValuePair<string, IType>>();
                 foreach (var e in expr.Args)
                 {
-                    Variable arg = Evaluate(e, new Env());
+                    Variable arg = Evaluate(e, env);
                     args.Add(new KeyValuePair<string, IType>(arg.Name, arg.Type));
                 }
                 Function f = new Function(
@@ -164,6 +166,7 @@ namespace BetterSimpleLang
                 List<Variable> vars = new List<Variable>();
                 foreach (var e in expr.Args)
                 {
+                    var ttt = e.Kind();
                     vars.Add(Evaluate(e, env));
                 }
                 return f.Execute(vars.ToArray());
@@ -180,6 +183,22 @@ namespace BetterSimpleLang
             if ( cond_ev.Type == Boolean.Type && Boolean.ParseValue(cond_ev.Value) == true  )
             {
                 foreach(var e in body)
+                {
+                    Evaluate(e, env);
+                }
+            }
+
+            return Variable.NewEmpty();
+        }
+
+        public Variable EvaluateLoopExpression(LoopExpression expr, Env env)
+        {
+            IExpression cond = expr.Condition;
+            IExpression[] body = expr.Body;
+            Variable cond_ev = Evaluate(cond, env);
+            while (cond_ev.Type == Boolean.Type && Boolean.ParseValue(cond_ev.Value) == true)
+            {
+                foreach (var e in body)
                 {
                     Evaluate(e, env);
                 }
