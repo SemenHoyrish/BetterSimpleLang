@@ -156,6 +156,11 @@ namespace BetterSimpleLang
                 expressions[ind] = expr;
             }
 
+            if (sign_tokens.Count == 0)
+            {
+                return new CalcExpression() { Left = exprs[0], Operator = new Token() { kind = TokenKind.Plus, text = "+" }, Right = new CalcExpression() { Value = new Token() { kind = TokenKind.Number, text = "0" } } };
+            }
+
             return expressions[sign_tokens[sign_tokens.Count - 1].Value[0]];
         }
 
@@ -253,11 +258,13 @@ namespace BetterSimpleLang
             {
                 if (it.Current().kind == TokenKind.OpenParenthesis)
                 {
+                    if (open_par > 0) ts.Add(it.Current());
                     open_par++;
                     continue;
                 }
                 if (it.Current().kind == TokenKind.CloseParenthesis)
                 {
+                    if (open_par > 0) ts.Add(it.Current());
                     open_par--;
                     continue;
                 }

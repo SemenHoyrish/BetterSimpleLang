@@ -32,6 +32,8 @@ namespace BetterSimpleLang
         {
             Variables = new List<Variable>();
             Functions = new List<Function>();
+
+            Functions.Add(new Function("print", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Integer.Type) }, new IExpression[0]));
         }
     }
 
@@ -56,13 +58,15 @@ namespace BetterSimpleLang
             //                "a / b + 0;" +
             //                "";
 
-            string input = "func test (int: a, int: b) {" +
-                                "return a + b;" +
-                            "} :: int;" +
-                            "" +
-                            "var sum :: int;" +
-                            "sum = $test(2, 5) + $test(4, 6);";
+            //string input = "func test (int: a, int: b) {" +
+            //                    "return a + b;" +
+            //                "} :: int;" +
+            //                "" +
+            //                "var sum :: int;" +
+            //                "sum = $test(2, 5) + $test(4, 6);";
             //"sum = $test(a, 5) + 3 * 2;";
+
+            string input = File.ReadAllText("test.bsl");
 
             var tokens = lexer.GetTokens(input);
             Parser parser = new Parser();
@@ -73,17 +77,17 @@ namespace BetterSimpleLang
 
             foreach (var e in exprs)
             {
-                Console.Write(e.Kind());
-                Console.Write("> ");
+                //Console.Write(e.Kind());
+                //Console.Write("> ");
                 var r = evaluator.Evaluate(e, env);
-                Console.WriteLine(r.Value);
+                //Console.WriteLine(r.Value);
             }
 
             //Console.WriteLine(res.Value);
 
             foreach (var v in env.Variables)
             {
-                Console.WriteLine(v);
+                //Console.WriteLine(v);
             }
 
 

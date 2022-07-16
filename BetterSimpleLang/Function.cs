@@ -50,6 +50,13 @@ namespace BetterSimpleLang
             object result = null;
 
             Variable r = Variable.NewEmpty();
+
+            if(Name == "print")
+            {
+                Console.WriteLine(env.Variables[0].Value);
+                return r;
+            }
+
             foreach (var e in Body)
             {
                 r = evaluator.Evaluate(e, env);

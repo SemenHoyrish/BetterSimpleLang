@@ -26,6 +26,7 @@ namespace BetterSimpleLang
         public Token Operator;
         public IExpression Right;
 
+        //public Token Value;
         public Token Value;
 
         public ExpressionKind Kind() => ExpressionKind.Calc;
