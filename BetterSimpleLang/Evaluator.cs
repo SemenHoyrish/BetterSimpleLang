@@ -10,6 +10,7 @@ namespace BetterSimpleLang
         private Dictionary<string, IType> _types = new Dictionary<string, IType>()
         {
             { "int", Integer.Type },
+            { "bool", Boolean.Type },
         };
 
         public Variable Evaluate(IExpression expr, Env env)
@@ -28,6 +29,8 @@ namespace BetterSimpleLang
                     return EvaluateFuncArgExpression((FuncArgExpression)expr, env);
                 case ExpressionKind.FuncExecution:
                     return EvaluateFuncExecutionExpression((FuncExecutionExpression)expr, env);
+                case ExpressionKind.If:
+                    return EvaluateIfExpression((IfExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
@@ -78,6 +81,13 @@ namespace BetterSimpleLang
                     return new Variable("", Integer.Type, Integer.ParseValue(left.Value) * Integer.ParseValue(right.Value));
                 case TokenKind.Slash:
                     return new Variable("", Integer.Type, Integer.ParseValue(left.Value) / Integer.ParseValue(right.Value));
+                case TokenKind.EqualsEquals:
+                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) == Integer.ParseValue(right.Value));
+                case TokenKind.Bigger:
+                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) > Integer.ParseValue(right.Value));
+                case TokenKind.Less:
+                    return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) < Integer.ParseValue(right.Value));
+
             }
 
             return new Variable("", Null.Type);
@@ -88,12 +98,13 @@ namespace BetterSimpleLang
             if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) == null)
             {
                 IType t = Null.Type;
-                switch (expr.Type.text)
-                {
-                    case "int":
-                        t = Integer.Type;
-                        break;
-                }
+                //switch (expr.Type.text)
+                //{
+                //    case "int":
+                //        t = Integer.Type;
+                //        break;
+                //}
+                t = _types[expr.Type.text];
                 env.Variables.Add(new Variable(expr.Name.text, t));
             }
 
@@ -108,6 +119,10 @@ namespace BetterSimpleLang
                 if (v.Type == Integer.Type)
                 {
                     v.Value = Integer.ParseValue(Evaluate(expr.Value, env).Value);
+                }
+                else if (v.Type == Boolean.Type)
+                {
+                    v.Value = Boolean.ParseValue(Evaluate(expr.Value, env).Value);
                 }
             }
 
@@ -152,6 +167,22 @@ namespace BetterSimpleLang
                     vars.Add(Evaluate(e, env));
                 }
                 return f.Execute(vars.ToArray());
+            }
+
+            return Variable.NewEmpty();
+        }
+
+        public Variable EvaluateIfExpression(IfExpression expr, Env env)
+        {
+            IExpression cond = expr.Condition;
+            IExpression[] body = expr.Body;
+            Variable cond_ev = Evaluate(cond, env);
+            if ( cond_ev.Type == Boolean.Type && Boolean.ParseValue(cond_ev.Value) == true  )
+            {
+                foreach(var e in body)
+                {
+                    Evaluate(e, env);
+                }
             }
 
             return Variable.NewEmpty();

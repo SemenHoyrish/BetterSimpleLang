@@ -16,6 +16,10 @@ namespace BetterSimpleLang
 
             bool func = false;
             int cb = 0;
+            bool loop = false;
+            int cb_loop = 0;
+            bool if_expr = false;
+            int cb_if = 0;
             while (it.Next() != null)
             {
                 if (it.Current().text == "func") func = true;
@@ -23,9 +27,20 @@ namespace BetterSimpleLang
                 if (it.Current().kind == TokenKind.CloseCurlyBracket) cb--;
                 if (it.Current().kind == TokenKind.Semicolon && func && cb == 0) func = false;
 
-                if (!func && it.Current().kind == TokenKind.Semicolon)
+                if (!func && it.Current().text == "while") loop = true;
+                if (it.Current().kind == TokenKind.OpenCurlyBracket && loop) cb_loop++;
+                if (it.Current().kind == TokenKind.CloseCurlyBracket && loop) cb_loop--;
+                if (it.Current().kind == TokenKind.Semicolon && loop && cb_loop == 0) loop = false;
+
+                if (!func && !loop && it.Current().text == "if") if_expr= true;
+                if (!loop && it.Current().kind == TokenKind.OpenCurlyBracket && if_expr) cb_if++;
+                if (!loop && it.Current().kind == TokenKind.CloseCurlyBracket && if_expr) cb_if--;
+                if (!loop && it.Current().kind == TokenKind.Semicolon && if_expr && cb_if == 0) if_expr = false;
+
+                if (!func && !loop && !if_expr && it.Current().kind == TokenKind.Semicolon)
                 {
                     IExpression expr;
+                    
                     switch (ts[0])
                     {
                         case var t when ts[0].text == "var":
@@ -36,6 +51,12 @@ namespace BetterSimpleLang
                             break;
                         case var t when ts[0].text == "func":
                             expr = ParseFuncDeclarationExpression(ts.ToArray());
+                            break;
+                        case var t when ts[0].text == "while":
+                            expr = ParseLoopExpression(ts.ToArray());
+                            break;
+                        case var t when ts[0].text == "if":
+                            expr = ParseIfExpression(ts.ToArray());
                             break;
                         //case var t when ts[0].text == "$":
                         //    expr = ParseFuncExecutionExpression(ts.ToArray());
@@ -60,7 +81,7 @@ namespace BetterSimpleLang
             return exprs.ToArray();
         }
 
-        public CalcExpression ParseCalcExpression(Token[] tokens)
+        public IExpression ParseCalcExpression(Token[] tokens)
         {
             if (tokens.Length == 1)
                 return new CalcExpression() { Value = tokens[0] };
@@ -158,7 +179,8 @@ namespace BetterSimpleLang
 
             if (sign_tokens.Count == 0)
             {
-                return new CalcExpression() { Left = exprs[0], Operator = new Token() { kind = TokenKind.Plus, text = "+" }, Right = new CalcExpression() { Value = new Token() { kind = TokenKind.Number, text = "0" } } };
+                //return new CalcExpression() { Left = exprs[0], Operator = new Token() { kind = TokenKind.Plus, text = "+" }, Right = new CalcExpression() { Value = new Token() { kind = TokenKind.Number, text = "0" } } };
+                return exprs[0];
             }
 
             return expressions[sign_tokens[sign_tokens.Count - 1].Value[0]];
@@ -196,6 +218,7 @@ namespace BetterSimpleLang
 
             bool body = false;
             bool body_parsed = false;
+            int open_cur = 0;
 
             List<Token> body_tokens = new List<Token>();
 
@@ -203,39 +226,91 @@ namespace BetterSimpleLang
             while (it.Next() != null)
             {
                 //if (it.Current().kind == TokenKind.OpenParenthesis)
-                switch (it.Current().kind)
+                TokenKind cur = it.Current().kind;
+                if (cur == TokenKind.OpenParenthesis && !args_parsed)
                 {
-                    case TokenKind.OpenParenthesis:
-                        args = true;
-                        break;
-                    case TokenKind.CloseParenthesis when args && !args_parsed:
-                        args = false;
-                        args_parsed = true;
-                        break;
-                    case TokenKind.OpenCurlyBracket:
+                    args = true;
+                }
+                else if (cur == TokenKind.CloseParenthesis && !args_parsed)
+                {
+                    args = false;
+                    args_parsed = true;
+                }
+                else if (cur == TokenKind.OpenCurlyBracket)
+                {
+                    if (!body)
+                    {
                         body = true;
-                        break;
-                    case TokenKind.CloseCurlyBracket when body && !body_parsed:
+                    }
+                    else
+                    {
+                        body_tokens.Add(it.Current());
+                    }
+                    open_cur++;
+                }
+                else if(cur == TokenKind.CloseCurlyBracket)
+                {
+                    if (open_cur == 1 && body)
+                    {
                         body = false;
                         body_parsed = true;
-                        break;
-                    case TokenKind.ColonColon:
-                        type = it.Next();
-                        break;
-                    default:
-                        if (args)
-                        {
-                            if (it.Current().kind == TokenKind.Comma) it.Next();
-                            Token n = it.Current();
-                            it.Next();
-                            args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n });
-                        }
-                        if (body)
-                        {
-                            body_tokens.Add(it.Current());
-                        }
-                        break;
+                    }else
+                    {
+                        body_tokens.Add(it.Current());
+                    }
+                    open_cur--;
                 }
+                else if (cur == TokenKind.ColonColon)
+                {
+                    type = it.Next();
+                    break;
+                }
+
+                else if (args)
+                {
+                    if (it.Current().kind == TokenKind.Comma) it.Next();
+                    Token n = it.Current();
+                    it.Next();
+                    args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n });
+                }
+                else if (body)
+                {
+                    body_tokens.Add(it.Current());
+                }
+
+                //switch (it.Current().kind)
+                //{
+                //    case TokenKind.OpenParenthesis when !args_parsed:
+                //        args = true;
+                //        break;
+                //    case TokenKind.CloseParenthesis when args && !args_parsed:
+                //        args = false;
+                //        args_parsed = true;
+                //        break;
+                //    case TokenKind.OpenCurlyBracket when !body:
+                //        body = true;
+                //        break;
+                //    case TokenKind.CloseCurlyBracket when body && !body_parsed:
+                //        body = false;
+                //        body_parsed = true;
+                //        break;
+                //    case TokenKind.ColonColon:
+                //        type = it.Next();
+                //        break;
+                //    default:
+                //        if (args)
+                //        {
+                //            if (it.Current().kind == TokenKind.Comma) it.Next();
+                //            Token n = it.Current();
+                //            it.Next();
+                //            args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n });
+                //        }
+                //        if (body)
+                //        {
+                //            body_tokens.Add(it.Current());
+                //        }
+                //        break;
+                //}
             }
 
             return new FuncDeclarationExpression() { Name = name, Type = type, Args = args_list.ToArray(), Body = Parse(body_tokens.ToArray()) };
@@ -284,6 +359,87 @@ namespace BetterSimpleLang
             e.Args = exprs.ToArray();
 
             return e;
+        }
+
+        public IfExpression ParseIfExpression(Token[] tokens)
+        {
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+            it.Next();
+
+            bool condition_parsed = false;
+            int open_par = 0;
+
+            List<Token> condition = new List<Token>();
+            IExpression condition_expr = null;
+
+            bool body_parsed = false;
+            int open_cur = 0;
+
+            List<Token> body = new List<Token>();
+            IExpression[] body_exprs = null;
+
+            while(it.Next() != null)
+            {
+                if (!condition_parsed)
+                {
+                    if (it.Current().kind == TokenKind.OpenParenthesis) open_par++;
+                    else if (it.Current().kind == TokenKind.CloseParenthesis)
+                    {
+                        if(open_par == 1)
+                        {
+                            condition_parsed = true;
+                            condition_expr = Parse(condition.ToArray())[0];
+                        }
+                        open_par--;
+                    }
+                    else
+                    {
+                        condition.Add(it.Current());
+                    }
+                }
+                else
+                {
+                    if (it.Current().kind == TokenKind.OpenCurlyBracket)
+                    {
+                        if(open_cur > 0)
+                        {
+                            body.Add(it.Current());
+                        }
+                        open_cur++;
+                    }
+                    else if(it.Current().kind == TokenKind.CloseCurlyBracket)
+                    {
+                        if (open_cur == 1)
+                        {
+                            body_parsed = true;
+                            body_exprs = Parse(body.ToArray());
+                        }
+                        else
+                        {
+                            body.Add(it.Current());
+                        }
+                        open_cur--;
+                    }
+                    else
+                    {
+                        body.Add(it.Current());
+                    }
+                }
+            }
+
+            if (condition == null || body_exprs == null)
+            {
+                // TODO: Report Error
+            }
+
+            return new IfExpression() { Condition = condition_expr, Body = body_exprs };
+        }
+
+        public LoopExpression ParseLoopExpression(Token[] tokens)
+        {
+
+
+            return null;
         }
     }
 }

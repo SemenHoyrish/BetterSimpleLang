@@ -21,6 +21,8 @@ namespace BetterSimpleLang
         Slash,
         Equals,
         EqualsEquals,
+        Bigger,
+        Less,
 
         OpenParenthesis,
         CloseParenthesis,
@@ -52,14 +54,19 @@ namespace BetterSimpleLang
             TokenKind.Slash,
             TokenKind.Equals,
             TokenKind.EqualsEquals,
+            TokenKind.Bigger,
+            TokenKind.Less,
         };
 
         public static Dictionary<TokenKind, int> OperatorsPriority = new Dictionary<TokenKind, int>
         {
-            { TokenKind.Plus, 0 },
-            { TokenKind.Minus, 0 },
-            { TokenKind.Star, 1 },
-            { TokenKind.Slash, 1 },
+            { TokenKind.Bigger, 0 },
+            { TokenKind.Less, 0 },
+            { TokenKind.EqualsEquals, 0 },
+            { TokenKind.Plus, 1 },
+            { TokenKind.Minus, 1 },
+            { TokenKind.Star, 2 },
+            { TokenKind.Slash, 3 },
             //{ TokenKind.Equals,
             //{ TokenKind.EqualsEquals,
         };

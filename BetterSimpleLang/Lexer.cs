@@ -83,6 +83,14 @@ namespace BetterSimpleLang
                             result.Add(new Token(TokenKind.Equals, "="));
                         break;
 
+                    case '>':
+                        result.Add(new Token(TokenKind.Bigger, ">"));
+                        break;
+
+                    case '<':
+                        result.Add(new Token(TokenKind.Less, "<"));
+                        break;
+
                     case ',':
                         result.Add(new Token(TokenKind.Comma, ","));
                         break;

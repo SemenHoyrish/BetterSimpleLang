@@ -12,7 +12,9 @@ namespace BetterSimpleLang
         FuncDeclaration,
         FuncArg,
         Return,
-        FuncExecution
+        FuncExecution,
+        If,
+        Loop
     }
 
     public interface IExpression
@@ -74,5 +76,19 @@ namespace BetterSimpleLang
         public IExpression[] Args;
 
         public ExpressionKind Kind() => ExpressionKind.FuncExecution;
+    }
+
+    public class IfExpression : IExpression
+    {
+        public IExpression Condition;
+        public IExpression[] Body;
+
+        public ExpressionKind Kind() => ExpressionKind.If;
+    }
+
+    public class LoopExpression : IExpression
+    {
+
+        public ExpressionKind Kind() => ExpressionKind.Loop;
     }
 }

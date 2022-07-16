@@ -66,7 +66,18 @@ namespace BetterSimpleLang
             //                "sum = $test(2, 5) + $test(4, 6);";
             //"sum = $test(a, 5) + 3 * 2;";
 
-            string input = File.ReadAllText("test.bsl");
+
+            const string FILENAME = "test.bsl";
+
+            //string input = File.ReadAllText(FILENAME);
+            string input = "";
+            foreach(var l in File.ReadAllLines(FILENAME))
+            {
+                if (!l.Trim().StartsWith("//"))
+                    input += l;
+            }
+            
+
 
             var tokens = lexer.GetTokens(input);
             Parser parser = new Parser();

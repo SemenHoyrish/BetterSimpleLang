@@ -32,6 +32,7 @@ namespace BetterSimpleLang
 
         public static int ParseValue(object v)
         {
+            // Report error
             if (v == null) return 0;
             try
             {
@@ -45,6 +46,7 @@ namespace BetterSimpleLang
                 }
                 catch
                 {
+                    // Report error
                     return 0;
                 }
             }
@@ -52,4 +54,34 @@ namespace BetterSimpleLang
 
         public static int DefaultValue() => 0;
     }
+
+    public class Boolean : IType<bool>
+    {
+        public static Boolean Type = new Boolean();
+
+        public static bool ParseValue(object v)
+        {
+            // Report error
+            if (v == null) return false;
+            try
+            {
+                return (bool)v;
+            }
+            catch
+            {
+                try
+                {
+                    return bool.Parse((string)v);
+                }
+                catch
+                {
+                    // Report error
+                    return false;
+                }
+            }
+        }
+
+        public static bool DefaultValue() => false;
+    }
+
 }
