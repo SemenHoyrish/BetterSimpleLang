@@ -27,6 +27,11 @@ namespace BetterSimpleLang
             Functions.Add(new Function("arr_get", Arr.ItemType, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type), new KeyValuePair<string, IType>("index", Integer.Type) }, new IExpression[0]));
             Functions.Add(new Function("arr_del", Boolean.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type), new KeyValuePair<string, IType>("index", Integer.Type) }, new IExpression[0]));
             Functions.Add(new Function("arr_len", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type) }, new IExpression[0]));
+
+            Functions.Add(new Function("read_file", Boolean.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", String.Type) }, new IExpression[0]));
+            Functions.Add(new Function("write_file", Boolean.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", String.Type), new KeyValuePair<string, IType>("content", String.Type) }, new IExpression[0]));
+
+            Functions.Add(new Function("concat_str", String.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("str1", String.Type), new KeyValuePair<string, IType>("str2", String.Type) }, new IExpression[0]));
         }
     }
 }

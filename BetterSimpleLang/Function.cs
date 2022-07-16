@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace BetterSimpleLang
@@ -112,6 +113,22 @@ namespace BetterSimpleLang
             if (Name == "arr_len")
             {
                 return new Variable("", Integer.Type, ((List<Variable>)_args[0].Value).Count);
+            }
+            if (Name == "read_file")
+            {
+                string s = String.ParseValue(_args[0].Value);
+                return new Variable("", String.Type, File.ReadAllText(s));
+            }
+            if (Name == "write_file")
+            {
+                if (_args[0].Type != String.Type || _args[1].Type != String.Type) return new Variable("", Boolean.Type, false);
+                if (File.Exists(String.ParseValue(_args[0].Value))) return new Variable("", Boolean.Type, false);
+                File.WriteAllText( String.ParseValue(_args[0].Value), String.ParseValue(_args[1].Value).Replace("\\n", "\n") );
+                return new Variable("", Boolean.Type, true);
+            }
+            if (Name == "concat_str")
+            {
+                return new Variable("", String.Type, String.ParseValue(_args[0].Value) + String.ParseValue(_args[1].Value));
             }
 
             foreach (var e in Body)

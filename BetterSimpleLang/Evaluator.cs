@@ -70,7 +70,10 @@ namespace BetterSimpleLang
                 }
                 if (expr.Value.kind == TokenKind.String)
                     return new Variable("", String.Type, expr.Value.text);
-                    //return new Variable("", String.Type, expr.Value.text.Substring(1, expr.Value.text.Length - 1));
+                //return new Variable("", String.Type, expr.Value.text.Substring(1, expr.Value.text.Length - 1));
+                if (expr.Value.kind == TokenKind.Name && (expr.Value.text.ToLower() == "true" || expr.Value.text.ToLower() == "false"))
+                    return new Variable("", Boolean.Type, Boolean.ParseValue(expr.Value.text));
+
 
                 Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Value.text);
                 if (v == null)
