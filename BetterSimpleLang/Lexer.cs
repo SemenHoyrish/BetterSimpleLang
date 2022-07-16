@@ -157,11 +157,11 @@ namespace BetterSimpleLang
                                 result.Add(new Token(TokenKind.Name, name));
                                 break;
                             }
-                            if (char.IsDigit(current()))
+                            if (char.IsDigit(current()) || current() == '.')
                             {
                                 string number = "";
                                 number += current();
-                                while (look_next() != null && char.IsDigit((char)look_next()))
+                                while (look_next() != null && (char.IsDigit((char)look_next()) || (char)look_next() == '.'))
                                 {
                                     number += next();
                                 }

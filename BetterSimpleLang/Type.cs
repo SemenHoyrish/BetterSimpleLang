@@ -120,4 +120,33 @@ namespace BetterSimpleLang
         public static string DefaultValue() => "";
     }
 
+    public class Double : IType<double>
+    {
+        public static Double Type = new Double();
+
+        public static double ParseValue(object v)
+        {
+            // Report error
+            if (v == null) return 0;
+            try
+            {
+                return (double)v;
+            }
+            catch
+            {
+                try
+                {
+                    return double.Parse(((string)v).Replace(".", ","));
+                }
+                catch
+                {
+                    // Report error
+                    return 0;
+                }
+            }
+        }
+
+        public static double DefaultValue() => 0;
+    }
+
 }

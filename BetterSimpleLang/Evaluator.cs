@@ -12,6 +12,7 @@ namespace BetterSimpleLang
             { "int", Integer.Type },
             { "bool", Boolean.Type },
             { "str", String.Type },
+            { "double", Double.Type },
         };
 
         public Variable Evaluate(IExpression expr, Env env)
@@ -53,8 +54,15 @@ namespace BetterSimpleLang
 
             if (expr.Value != null)
             {
-                if (is_str_digits(expr.Value.text))
-                    return new Variable("", Integer.Type, expr.Value.text);
+                //if (is_str_digits(expr.Value.text))
+                //    return new Variable("", Integer.Type, expr.Value.text);
+                if (expr.Value.kind == TokenKind.Number)
+                {
+                    if (expr.Value.text.Contains("."))
+                        return new Variable("", Double.Type, expr.Value.text);
+                    else
+                        return new Variable("", Integer.Type, expr.Value.text);
+                }
                 if (expr.Value.kind == TokenKind.String)
                     return new Variable("", String.Type, expr.Value.text);
                     //return new Variable("", String.Type, expr.Value.text.Substring(1, expr.Value.text.Length - 1));
@@ -107,6 +115,27 @@ namespace BetterSimpleLang
                         // TODO: Report Error
                         throw new Exception();
                 }
+            else if (left_type == Double.Type)
+                switch (op_kind)
+                {
+                    case TokenKind.Plus:
+                        return new Variable("", Double.Type, Double.ParseValue(left.Value) + Double.ParseValue(right.Value));
+                    case TokenKind.Minus:
+                        return new Variable("", Double.Type, Double.ParseValue(left.Value) - Double.ParseValue(right.Value));
+                    case TokenKind.Star:
+                        return new Variable("", Double.Type, Double.ParseValue(left.Value) * Double.ParseValue(right.Value));
+                    case TokenKind.Slash:
+                        return new Variable("", Double.Type, Double.ParseValue(left.Value) / Double.ParseValue(right.Value));
+                    case TokenKind.EqualsEquals:
+                        return new Variable("", Boolean.Type, Double.ParseValue(left.Value) == Double.ParseValue(right.Value));
+                    case TokenKind.Bigger:
+                        return new Variable("", Boolean.Type, Double.ParseValue(left.Value) > Double.ParseValue(right.Value));
+                    case TokenKind.Less:
+                        return new Variable("", Boolean.Type, Double.ParseValue(left.Value) < Double.ParseValue(right.Value));
+                    default:
+                        // TODO: Report Error
+                        throw new Exception();
+                }
             else if (left_type == Boolean.Type)
                 switch (op_kind)
                 {
@@ -155,6 +184,10 @@ namespace BetterSimpleLang
                 if (v.Type == Integer.Type)
                 {
                     v.Value = Integer.ParseValue(Evaluate(expr.Value, env).Value);
+                }
+                if (v.Type == Double.Type)
+                {
+                    v.Value = Double.ParseValue(Evaluate(expr.Value, env).Value);
                 }
                 else if (v.Type == Boolean.Type)
                 {

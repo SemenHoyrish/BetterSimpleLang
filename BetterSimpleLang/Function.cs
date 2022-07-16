@@ -54,7 +54,7 @@ namespace BetterSimpleLang
 
             Variable r = Variable.NewEmpty();
 
-            if(new List<string>() { "printi", "prints", "printb" }.Contains(Name))
+            if(new List<string>() { "printi", "printd", "prints", "printb" }.Contains(Name))
             {
                 Console.Write( env.Variables[0].Value.ToString().Replace("\\n", "\n") );
                 return r;
@@ -67,6 +67,19 @@ namespace BetterSimpleLang
                 if (int.TryParse(s, out i))
                 {
                     return new Variable("", Integer.Type, i);
+                }
+                else
+                {
+                    return r;
+                }
+            }
+            if (Name == "readd")
+            {
+                string s = Console.ReadLine();
+                double d = 0;
+                if (double.TryParse(s, out d))
+                {
+                    return new Variable("", Double.Type, d);
                 }
                 else
                 {
