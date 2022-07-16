@@ -149,4 +149,88 @@ namespace BetterSimpleLang
         public static double DefaultValue() => 0;
     }
 
+
+    public interface IArr : IType<List<Variable>>
+    {
+        public bool Add(Variable item);
+        public Variable Get(int index);
+        public bool Remove(int index);
+        public int Len();
+    }
+
+    public class Arr : IArr
+    {
+        private List<Variable> _list;
+        public static IType ItemType = Null.Type;
+
+        public static Arr Type = new Arr();
+
+        public static List<Variable> ParseValue(object v)
+        {
+            // Report error
+            if (v == null) return null;
+            try
+            {
+                return (List<Variable>)v;
+            }
+            catch
+            {
+                // Report error
+                return null;
+            }
+        }
+
+        public static List<Variable> DefaultValue() => new List<Variable>();
+
+        public Arr()
+        {
+            _list = new List<Variable>();
+        }
+
+        public bool Add(Variable item)
+        {
+            if (item.Type != ItemType) return false;
+            _list.Add(item);
+            return true;
+        }
+
+        public Variable Get(int index)
+        {
+            return _list[index];
+        }
+
+        public bool Remove(int index)
+        {
+            _list.RemoveAt(index);
+            return true;
+        }
+
+        public int Len()
+        {
+            return _list.Count;
+        }
+
+    }
+
+    public class IntArr : Arr
+    {
+        public static IType ItemType = Integer.Type;
+        //public static IntArr Type = new IntArr();
+    }
+    public class DoubleArr : Arr
+    {
+        public static IType ItemType = Double.Type;
+        //public static DoubleArr Type = new DoubleArr();
+    }
+    public class BoolArr : Arr
+    {
+        public static IType ItemType = Boolean.Type;
+        //public static BoolArr Type = new BoolArr();
+    }
+    public class StrArr : Arr
+    {
+        public static IType ItemType = String.Type;
+        //public static StrArr Type = new StrArr();
+    }
+
 }

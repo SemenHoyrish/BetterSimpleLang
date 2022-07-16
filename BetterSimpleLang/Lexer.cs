@@ -40,6 +40,14 @@ namespace BetterSimpleLang
                 return r;
             }
 
+            bool is_name_char(char c)
+            {
+                if (char.IsLetter(c)) return true;
+                List<char> chars = new List<char>() { '_' };
+                if (chars.Contains(c)) return true;
+                return false;
+            }
+
             bool str = false;
 
             while (next() != null)
@@ -146,11 +154,11 @@ namespace BetterSimpleLang
                             {
                                 break;
                             }
-                            if (char.IsLetter(current()))
+                            if (is_name_char(current()))
                             {
                                 string name = "";
                                 name += current();
-                                while (look_next() != null && char.IsLetter((char)look_next()))
+                                while (look_next() != null && is_name_char((char)look_next()))
                                 {
                                     name += next();
                                 }

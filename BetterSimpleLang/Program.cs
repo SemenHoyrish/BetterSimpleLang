@@ -85,6 +85,7 @@ namespace BetterSimpleLang
 
             //Console.WriteLine(res.Value);
 
+
             foreach (var v in env.Variables)
             {
                 //Console.WriteLine(v);

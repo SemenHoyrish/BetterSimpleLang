@@ -22,6 +22,11 @@ namespace BetterSimpleLang
             Functions.Add(new Function("readi", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Integer.Type) }, new IExpression[0]));
             Functions.Add(new Function("readd", Double.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Integer.Type) }, new IExpression[0]));
             Functions.Add(new Function("reads", String.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Integer.Type) }, new IExpression[0]));
+
+            Functions.Add(new Function("arr_add", Boolean.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type), new KeyValuePair<string, IType>("index", Integer.Type) }, new IExpression[0]));
+            Functions.Add(new Function("arr_get", Arr.ItemType, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type), new KeyValuePair<string, IType>("index", Integer.Type) }, new IExpression[0]));
+            Functions.Add(new Function("arr_del", Boolean.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type), new KeyValuePair<string, IType>("index", Integer.Type) }, new IExpression[0]));
+            Functions.Add(new Function("arr_len", Integer.Type, new KeyValuePair<string, IType>[] { new KeyValuePair<string, IType>("value", Arr.Type) }, new IExpression[0]));
         }
     }
 }

@@ -13,6 +13,11 @@ namespace BetterSimpleLang
             { "bool", Boolean.Type },
             { "str", String.Type },
             { "double", Double.Type },
+
+            { "list_int", IntArr.Type },
+            { "list_double", DoubleArr.Type },
+            { "list_bool", BoolArr.Type },
+            { "list_str", StrArr.Type },
         };
 
         public Variable Evaluate(IExpression expr, Env env)
@@ -170,7 +175,10 @@ namespace BetterSimpleLang
                 //        break;
                 //}
                 t = _types[expr.Type.text];
-                env.Variables.Add(new Variable(expr.Name.text, t));
+                if (t == Arr.Type)
+                    env.Variables.Add(new Variable(expr.Name.text, t, Arr.DefaultValue()));
+                else
+                    env.Variables.Add(new Variable(expr.Name.text, t));
             }
 
             return Variable.NewEmpty();
@@ -273,6 +281,7 @@ namespace BetterSimpleLang
                 {
                     Evaluate(e, env);
                 }
+                cond_ev = Evaluate(cond, env);
             }
 
             return Variable.NewEmpty();

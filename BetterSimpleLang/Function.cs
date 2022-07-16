@@ -92,6 +92,28 @@ namespace BetterSimpleLang
                 return new Variable("", String.Type, s);
             }
 
+            if (Name == "arr_add")
+            {
+                if (_args[0].Type != Arr.Type) return new Variable("", Boolean.Type, false);
+                ((List<Variable>)_args[0].Value).Add(_args[1]);
+                return new Variable("", Boolean.Type, true);
+            }
+            if (Name == "arr_get")
+            {
+                if (_args[0].Type != Arr.Type) return r;
+                return ((List<Variable>)_args[0].Value)[(Integer.ParseValue(_args[1].Value))];
+            }
+            if (Name == "arr_del")
+            {
+                if (_args[0].Type != Arr.Type) return new Variable("", Boolean.Type, false);
+                ((List<Variable>)_args[0].Value).RemoveAt(Integer.ParseValue(_args[1].Value));
+                return new Variable("", Boolean.Type, true);
+            }
+            if (Name == "arr_len")
+            {
+                return new Variable("", Integer.Type, ((List<Variable>)_args[0].Value).Count);
+            }
+
             foreach (var e in Body)
             {
                 r = evaluator.Evaluate(e, env);
