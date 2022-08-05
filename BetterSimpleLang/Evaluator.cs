@@ -217,11 +217,11 @@ namespace BetterSimpleLang
         {
             if (env.Functions.FirstOrDefault(a => a.Name == expr.Name.text) == null)
             {
-                List<KeyValuePair<string, IType>> args = new List<KeyValuePair<string, IType>>();
+                List<FunctionArgument> args = new List<FunctionArgument>();
                 foreach (var e in expr.Args)
                 {
                     Variable arg = Evaluate(e, env);
-                    args.Add(new KeyValuePair<string, IType>(arg.Name, arg.Type));
+                    args.Add(new FunctionArgument(arg.Name, arg.Type, (bool)arg.Value));
                 }
                 Function f = new Function(
                     expr.Name.text,
@@ -237,7 +237,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateFuncArgExpression(FuncArgExpression expr, Env env)
         {
-            return new Variable(expr.Name.text, _types[expr.Type.text]);
+            return new Variable(expr.Name.text, _types[expr.Type.text], expr.IsReference);
         }
 
         public Variable EvaluateFuncExecutionExpression(FuncExecutionExpression expr, Env env)
@@ -251,7 +251,7 @@ namespace BetterSimpleLang
                     var ttt = e.Kind();
                     vars.Add(Evaluate(e, env));
                 }
-                return f.Execute(vars.ToArray());
+                return f.Execute(vars.ToArray(), env);
             }
 
             return Variable.NewEmpty();

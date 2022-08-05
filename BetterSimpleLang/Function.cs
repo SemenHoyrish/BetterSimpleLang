@@ -1,18 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace BetterSimpleLang
 {
+    public class FunctionArgument
+    {
+        public string Name;
+        public IType Type;
+        public bool IsReference;
+
+        public FunctionArgument(string name, IType type, bool isReference)
+        {
+            Name = name;
+            Type = type;
+            IsReference = isReference;
+        }
+
+        public virtual bool Equals(FunctionArgument other) =>
+            other.Name == Name && other.Type == Type && other.IsReference == IsReference;
+    }
+
     public class Function
     {
         public string Name;
         public IType Type;
-        public KeyValuePair<string, IType>[] Args;
+        //public KeyValuePair<string, IType>[] Args;
+        public FunctionArgument[] Args;
         public IExpression[] Body;
 
-        public Function(string name, IType type, KeyValuePair<string, IType>[] args, IExpression[] body)
+        public Function(string name, IType type, FunctionArgument[] args, IExpression[] body)
         {
             Name = name;
             Type = type;
@@ -20,20 +39,20 @@ namespace BetterSimpleLang
             Body = body;
         }
 
-        public Variable Execute(Variable[] _args)
+        public Variable Execute(Variable[] _args, Env root_env)
         {
             Variable[] args = new Variable[_args.Length];
             for(int i = 0; i < _args.Length; i++)
                 args[i] = _args[i].Copy();
 
             Iterator<Variable> args_it = new Iterator<Variable>(args, null);
-            var n = new KeyValuePair<string, IType>("", Null.Type);
-            Iterator<KeyValuePair<string, IType>> Args_it = new Iterator<KeyValuePair<string, IType>>(Args, n);
+            var n = new FunctionArgument("", Null.Type, false);
+            Iterator<FunctionArgument> Args_it = new Iterator<FunctionArgument>(Args, n);
             bool kvp_eq(KeyValuePair<string, IType> a, KeyValuePair<string, IType> b)
             {
                 return a.Key == b.Key && a.Value == b.Value;
             }
-            while (!kvp_eq(Args_it.Next(), n))
+            while (Args_it.Next() != n)
             {
                 args_it.Next();
 
@@ -41,8 +60,8 @@ namespace BetterSimpleLang
                 var a_c = args_it.Current();
 
                 //if (A_c.Key != a_c.Name || A_c.Value != a_c.Type) throw new Exception();
-                if (A_c.Value != a_c.Type) throw new Exception();
-                a_c.Name = A_c.Key;
+                if (A_c.Type != a_c.Type) throw new Exception();
+                a_c.Name = A_c.Name;
             }
             if (args_it.Next() != null) throw new Exception();
 
@@ -137,8 +156,17 @@ namespace BetterSimpleLang
                 if (e.Kind() == ExpressionKind.Return) result = r.Value;
             }
 
+            Iterator<FunctionArgument> Args_it_new = new Iterator<FunctionArgument>(Args, n);
+            while (Args_it_new.Next() != n)
+            {
+                if(Args_it_new.Current().IsReference)
+                {
+                    root_env.Variables.First(a => a.Name == _args[Args_it_new.GetIndex()].Name).Value =
+                        env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
+                }
+            }
 
-            // Change this to Parse Return Expression
+            // TODO: Change this to Parse Return Expression
             if (result == null && r.Value != null)
                 result = r.Value;
 

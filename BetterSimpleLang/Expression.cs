@@ -56,6 +56,7 @@ namespace BetterSimpleLang
     {
         public Token Type;
         public Token Name;
+        public bool IsReference;
 
         public ExpressionKind Kind() => ExpressionKind.FuncArg;
     }

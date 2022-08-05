@@ -270,8 +270,14 @@ namespace BetterSimpleLang
                 {
                     if (it.Current().kind == TokenKind.Comma) it.Next();
                     Token n = it.Current();
+                    bool is_ref = false;
+                    if (n.text == "ref")
+                    {
+                        is_ref = true;
+                        n = it.Next();
+                    }
                     it.Next();
-                    args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n });
+                    args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n, IsReference = is_ref });
                 }
                 else if (body)
                 {

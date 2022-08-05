@@ -4,6 +4,7 @@ using System.Text;
 
 namespace BetterSimpleLang
 {
+    // TODO: Reset Method
     public class Iterator<T>
     {
         private T _NULL;
@@ -42,5 +43,7 @@ namespace BetterSimpleLang
             }
             return _NULL;
         }
+
+        public int GetIndex() => _index;
     }
 }
