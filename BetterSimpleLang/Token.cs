@@ -32,7 +32,8 @@ namespace BetterSimpleLang
         OpenSquareBracket,
         CloseSquareBracket,
 
-        Dollar
+        Dollar,
+        Arrow
     }
 
     public class Token
@@ -57,17 +58,20 @@ namespace BetterSimpleLang
             TokenKind.EqualsEquals,
             TokenKind.Bigger,
             TokenKind.Less,
+            TokenKind.Arrow,
         };
 
         public static Dictionary<TokenKind, int> OperatorsPriority = new Dictionary<TokenKind, int>
         {
-            { TokenKind.Bigger, 0 },
-            { TokenKind.Less, 0 },
-            { TokenKind.EqualsEquals, 0 },
-            { TokenKind.Plus, 1 },
-            { TokenKind.Minus, 1 },
-            { TokenKind.Star, 2 },
+            { TokenKind.Equals, 0 },
+            { TokenKind.Bigger, 1 },
+            { TokenKind.Less, 1 },
+            { TokenKind.EqualsEquals, 1 },
+            { TokenKind.Plus, 2 },
+            { TokenKind.Minus, 2 },
+            { TokenKind.Star, 3 },
             { TokenKind.Slash, 3 },
+            { TokenKind.Arrow, 4 },
             //{ TokenKind.Equals,
             //{ TokenKind.EqualsEquals,
         };

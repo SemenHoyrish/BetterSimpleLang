@@ -20,24 +20,31 @@ namespace BetterSimpleLang
             int cb_loop = 0;
             bool if_expr = false;
             int cb_if = 0;
+            bool define = false;
+            int cb_define = 0;
             while (it.Next() != null)
             {
-                if (it.Current().text == "func") func = true;
-                if (it.Current().kind == TokenKind.OpenCurlyBracket) cb++;
-                if (it.Current().kind == TokenKind.CloseCurlyBracket) cb--;
-                if (it.Current().kind == TokenKind.Semicolon && func && cb == 0) func = false;
+                if (it.Current().text == "define") define = true;
+                if (it.Current().kind == TokenKind.OpenCurlyBracket) cb_define++;
+                if (it.Current().kind == TokenKind.CloseCurlyBracket) cb_define--;
+                if (it.Current().kind == TokenKind.Semicolon && define && cb_define == 0) define = false;
 
-                if (!func && it.Current().text == "while") loop = true;
-                if (it.Current().kind == TokenKind.OpenCurlyBracket && loop) cb_loop++;
-                if (it.Current().kind == TokenKind.CloseCurlyBracket && loop) cb_loop--;
-                if (it.Current().kind == TokenKind.Semicolon && loop && cb_loop == 0) loop = false;
+                if (!define && it.Current().text == "func") func = true;
+                if (!define && it.Current().kind == TokenKind.OpenCurlyBracket) cb++;
+                if (!define && it.Current().kind == TokenKind.CloseCurlyBracket) cb--;
+                if (!define && it.Current().kind == TokenKind.Semicolon && func && cb == 0) func = false;
 
-                if (!func && !loop && it.Current().text == "if") if_expr= true;
-                if (!loop && it.Current().kind == TokenKind.OpenCurlyBracket && if_expr) cb_if++;
-                if (!loop && it.Current().kind == TokenKind.CloseCurlyBracket && if_expr) cb_if--;
-                if (!loop && it.Current().kind == TokenKind.Semicolon && if_expr && cb_if == 0) if_expr = false;
+                if (!define && !func && it.Current().text == "while") loop = true;
+                if (!define && it.Current().kind == TokenKind.OpenCurlyBracket && loop) cb_loop++;
+                if (!define && it.Current().kind == TokenKind.CloseCurlyBracket && loop) cb_loop--;
+                if (!define && it.Current().kind == TokenKind.Semicolon && loop && cb_loop == 0) loop = false;
 
-                if (!func && !loop && !if_expr && it.Current().kind == TokenKind.Semicolon)
+                if (!define && !func && !loop && it.Current().text == "if") if_expr= true;
+                if (!define && !loop && it.Current().kind == TokenKind.OpenCurlyBracket && if_expr) cb_if++;
+                if (!define && !loop && it.Current().kind == TokenKind.CloseCurlyBracket && if_expr) cb_if--;
+                if (!define && !loop && it.Current().kind == TokenKind.Semicolon && if_expr && cb_if == 0) if_expr = false;
+
+                if (!define && !func && !loop && !if_expr && it.Current().kind == TokenKind.Semicolon)
                 {
                     IExpression expr;
                     
@@ -46,8 +53,11 @@ namespace BetterSimpleLang
                         case var t when ts[0].text == "var":
                             expr = ParseVarDeclarationExpression(ts.ToArray());
                             break;
-                        case var t when ts[0].kind == TokenKind.Name && ts[1].kind == TokenKind.Equals:
-                            expr = ParseVarSetExpression(ts.ToArray());
+                        //case var t when ts[0].kind == TokenKind.Name && ts[1].kind == TokenKind.Equals:
+                        //    expr = ParseVarSetExpression(ts.ToArray());
+                        //    break;
+                        case var t when ts[0].text == "define":
+                            expr = ParseStructDeclarationExpression(ts.ToArray());
                             break;
                         case var t when ts[0].text == "func":
                             expr = ParseFuncDeclarationExpression(ts.ToArray());
@@ -203,6 +213,30 @@ namespace BetterSimpleLang
             }
             ts.Add(new Token(TokenKind.Semicolon, ";"));
             return new VarSetExpression() { Name = tokens[0], Value = Parse(ts.ToArray())[0] };
+        }
+
+        public StructDeclarationExpression ParseStructDeclarationExpression(Token[] tokens)
+        {
+            Iterator<Token> it = new Iterator<Token>(tokens, null);
+            it.Next();
+
+            Token name = it.Next();
+            List<StructFieldExpression> fields = new List<StructFieldExpression>();
+
+            it.Next();
+
+            while(it.Next() != null)
+            {
+                if (it.Current().kind != TokenKind.CloseCurlyBracket && it.Current().kind != TokenKind.Semicolon)
+                {
+                    Token field_type = it.Current();
+                    it.Next();
+                    Token field_name = it.Next();
+                    fields.Add(new StructFieldExpression() { Name = field_name, Type = field_type });
+                }
+            }
+
+            return new StructDeclarationExpression() { Name = name, Fields = fields.ToArray() };
         }
 
         public FuncDeclarationExpression ParseFuncDeclarationExpression(Token[] tokens)

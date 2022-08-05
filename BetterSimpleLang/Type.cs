@@ -233,4 +233,30 @@ namespace BetterSimpleLang
         //public static StrArr Type = new StrArr();
     }
 
+
+    public class Struct : IType<List<Variable>>
+    {
+        public string Name;
+
+        //public static Struct Type = new Struct();
+
+        public static object DefaultValue() => null;
+
+        public static List<Variable> ParseValue(object v)
+        {
+            // Report error
+            if (v == null) return null;
+            try
+            {
+                List<Variable> fields = (List<Variable>)v;
+                return fields;
+            }
+            catch
+            {
+                // Report error
+                return null;
+            }
+        }
+    }
+
 }

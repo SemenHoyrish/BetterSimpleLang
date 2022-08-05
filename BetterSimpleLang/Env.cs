@@ -8,11 +8,14 @@ namespace BetterSimpleLang
     {
         public List<Variable> Variables;
         public List<Function> Functions;
+        public List<Structure> Structures;
 
         public Env()
         {
             Variables = new List<Variable>();
             Functions = new List<Function>();
+            Structures = new List<Structure>();
+
 
             Functions.Add(new Function("printi", Integer.Type, new FunctionArgument[] { new FunctionArgument("value", Integer.Type, false) }, new IExpression[0]));
             Functions.Add(new Function("printd", Integer.Type, new FunctionArgument[] { new FunctionArgument("value", Double.Type, false) }, new IExpression[0]));

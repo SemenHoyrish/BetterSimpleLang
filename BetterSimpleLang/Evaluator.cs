@@ -20,6 +20,17 @@ namespace BetterSimpleLang
             { "list_str", StrArr.Type },
         };
 
+
+        private IType Type(string s, Env env)
+        {
+            if (_types.ContainsKey(s)) return _types[s];
+            else if (env.Structures.FirstOrDefault(a => a.Name == s) != null)
+            {
+                return new Struct() { Name = s };
+            }
+            return null;
+        }
+
         public Variable Evaluate(IExpression expr, Env env)
         {
             switch (expr.Kind())
@@ -40,6 +51,8 @@ namespace BetterSimpleLang
                     return EvaluateIfExpression((IfExpression)expr, env);
                 case ExpressionKind.Loop:
                     return EvaluateLoopExpression((LoopExpression)expr, env);
+                case ExpressionKind.StructDeclaration:
+                    return EvaluateStructDeclarationExpression((StructDeclarationExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
@@ -89,6 +102,11 @@ namespace BetterSimpleLang
             IType left_type = left.Type;
             IType right_type = right.Type;
 
+            if (op_kind == TokenKind.Arrow)
+            {
+                return Struct.ParseValue(left.Value).First(a => a.Name == ((CalcExpression)expr.Right).Value.text);
+            }
+
             //if (left.Type != Integer.Type || right.Type != Integer.Type)
             //{
             //    return new Variable("", Null.Type);
@@ -96,10 +114,16 @@ namespace BetterSimpleLang
 
             // TODO: type checking for operations
 
-            if (left_type != right_type)
+            if (left_type != right_type && (typeof(Struct).IsInstanceOfType(left) != typeof(Struct).IsInstanceOfType(right)))
             {
                 // TODO: report error
                 throw new Exception();
+            }
+
+            if (op_kind == TokenKind.Equals)
+            {
+                left.Value = right.Value;
+                return Variable.NewEmpty();
             }
 
             if (left_type == Integer.Type)
@@ -177,9 +201,19 @@ namespace BetterSimpleLang
                 //        t = Integer.Type;
                 //        break;
                 //}
-                t = _types[expr.Type.text];
+                t = Type(expr.Type.text, env);
                 if (t == Arr.Type)
                     env.Variables.Add(new Variable(expr.Name.text, t, Arr.DefaultValue()));
+                else if (typeof(Struct).IsInstanceOfType(t))
+                {
+                    Structure st = env.Structures.First(a => a.Name == ((Struct)t).Name);
+                    List<Variable> vars = new List<Variable>();
+                    foreach(var sf in st.Fields)
+                    {
+                        vars.Add( new Variable(sf.Name, sf.Type) );
+                    }
+                    env.Variables.Add(new Variable(expr.Name.text, t, vars));
+                }
                 else
                     env.Variables.Add(new Variable(expr.Name.text, t));
             }
@@ -213,6 +247,21 @@ namespace BetterSimpleLang
             return Variable.NewEmpty();
         }
 
+        public Variable EvaluateStructDeclarationExpression(StructDeclarationExpression expr, Env env)
+        {
+            if (env.Structures.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            {
+                List<StructureField> fields = new List<StructureField>();
+                foreach(var fe in expr.Fields)
+                {
+                    fields.Add( new StructureField() { Name = fe.Name.text, Type = Type(fe.Type.text, env) } );
+                }
+                env.Structures.Add( new Structure() { Name = expr.Name.text, Fields = fields.ToArray() } );
+            }
+
+            return Variable.NewEmpty();
+        }
+
         public Variable EvaluateFuncDeclarationExpression(FuncDeclarationExpression expr, Env env)
         {
             if (env.Functions.FirstOrDefault(a => a.Name == expr.Name.text) == null)
@@ -225,7 +274,7 @@ namespace BetterSimpleLang
                 }
                 Function f = new Function(
                     expr.Name.text,
-                    _types[expr.Type.text],
+                    Type(expr.Type.text, env),
                     args.ToArray(),
                     expr.Body
                     );
@@ -237,7 +286,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateFuncArgExpression(FuncArgExpression expr, Env env)
         {
-            return new Variable(expr.Name.text, _types[expr.Type.text], expr.IsReference);
+            return new Variable(expr.Name.text, Type(expr.Type.text, env), expr.IsReference);
         }
 
         public Variable EvaluateFuncExecutionExpression(FuncExecutionExpression expr, Env env)

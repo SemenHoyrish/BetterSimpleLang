@@ -14,7 +14,9 @@ namespace BetterSimpleLang
         Return,
         FuncExecution,
         If,
-        Loop
+        Loop,
+        StructDeclaration,
+        StructField
     }
 
     public interface IExpression
@@ -50,6 +52,24 @@ namespace BetterSimpleLang
         public IExpression Value;
 
         public ExpressionKind Kind() => ExpressionKind.VarSet;
+    }
+
+    
+
+    public class StructFieldExpression : IExpression
+    {
+        public Token Name;
+        public Token Type;
+
+        public ExpressionKind Kind() => ExpressionKind.StructField;
+    }
+
+    public class StructDeclarationExpression : IExpression
+    {
+        public Token Name;
+        public StructFieldExpression[] Fields;
+
+        public ExpressionKind Kind() => ExpressionKind.StructDeclaration;
     }
 
     public class FuncArgExpression : IExpression

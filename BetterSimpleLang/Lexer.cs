@@ -88,7 +88,13 @@ namespace BetterSimpleLang
                             break;
 
                         case '-':
-                            result.Add(new Token(TokenKind.Minus, "-"));
+                            if (look_next() == '>')
+                            {
+                                next();
+                                result.Add(new Token(TokenKind.Arrow, "->"));
+                            }
+                            else
+                                result.Add(new Token(TokenKind.Minus, "-"));
                             break;
 
                         case '*':
