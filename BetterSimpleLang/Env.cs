@@ -38,7 +38,13 @@ namespace BetterSimpleLang
             Functions.Add(new Function("concat_str", String.Type, new FunctionArgument[] { new FunctionArgument("str1", String.Type, false), new FunctionArgument("str2", String.Type, false) }, new IExpression[0]));
 
             //Functions.Add(new Function("copy", Struct.Type, new FunctionArgument[] { new FunctionArgument("source", Struct.Type, false) }, new IExpression[0]));
+
+            //Functions.Add(new Function("clear", Struct.Type, new FunctionArgument[] { new FunctionArgument("st", Struct.Type, true) }, new IExpression[0]));
         }
+
+        // TODO: Add GetVar GetFunc GetStruct methods;
+        // TODO: Add global vars;
+        // TODO: Make functions see only local vars;
 
         public Env(Env root)
         {

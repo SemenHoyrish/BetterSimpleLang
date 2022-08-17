@@ -167,6 +167,12 @@ namespace BetterSimpleLang
                 return new Variable("", String.Type, String.ParseValue(_args[0].Value) + String.ParseValue(_args[1].Value));
             }
 
+            //if (Name == "clear")
+            //{
+            //    _args[0] = Struct.DefaultValue();
+            //    return Variable.NewEmpty();
+            //}
+
             //if (Name == "copy")
             //{
             //    if (_args[0].Type == Struct.Type)
@@ -180,7 +186,7 @@ namespace BetterSimpleLang
             foreach (var e in Body)
             {
                 r = evaluator.Evaluate(e, env);
-                if (e.Kind() == ExpressionKind.Return)
+                if (e.Kind() == ExpressionKind.Return || r.Value != null)
                 {
                     result = r.Value;
                     break;

@@ -435,20 +435,27 @@ namespace BetterSimpleLang
             {
                 if (!condition_parsed)
                 {
-                    if (it.Current().kind == TokenKind.OpenParenthesis) open_par++;
+                    if (it.Current().kind == TokenKind.OpenParenthesis)
+                    {
+                        if (open_par > 0) condition.Add(it.Current());
+
+                        open_par++;
+                    }
                     else if (it.Current().kind == TokenKind.CloseParenthesis)
                     {
-                        if(open_par == 1)
+                        if (open_par == 1)
                         {
                             condition_parsed = true;
                             condition_expr = Parse(condition.ToArray())[0];
                         }
+                        else
+                        {
+                            condition.Add(it.Current());
+                        }
                         open_par--;
                     }
                     else
-                    {
                         condition.Add(it.Current());
-                    }
                 }
                 else
                 {
@@ -509,7 +516,12 @@ namespace BetterSimpleLang
             {
                 if (!condition_parsed)
                 {
-                    if (it.Current().kind == TokenKind.OpenParenthesis) open_par++;
+                    if (it.Current().kind == TokenKind.OpenParenthesis)
+                    {
+                        if (open_par > 0) condition.Add(it.Current());
+
+                        open_par++;
+                    }
                     else if (it.Current().kind == TokenKind.CloseParenthesis)
                     {
                         if (open_par == 1)
@@ -517,12 +529,14 @@ namespace BetterSimpleLang
                             condition_parsed = true;
                             condition_expr = Parse(condition.ToArray())[0];
                         }
+                        else
+                        {
+                            condition.Add(it.Current());
+                        }
                         open_par--;
                     }
                     else
-                    {
                         condition.Add(it.Current());
-                    }
                 }
                 else
                 {
