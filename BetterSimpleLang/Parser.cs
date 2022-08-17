@@ -62,6 +62,9 @@ namespace BetterSimpleLang
                         case var t when ts[0].text == "func":
                             expr = ParseFuncDeclarationExpression(ts.ToArray());
                             break;
+                        //case var t when ts[0].text == "return":
+                        //    expr = ParseFuncDeclarationExpression(ts.ToArray());
+                            break;
                         case var t when ts[0].text == "while":
                             expr = ParseLoopExpression(ts.ToArray());
                             break;
@@ -95,6 +98,16 @@ namespace BetterSimpleLang
         {
             if (tokens.Length == 1)
                 return new CalcExpression() { Value = tokens[0] };
+
+            if (tokens[0].text == "return")
+            {
+                Token[] new_tokens = new Token[tokens.Length - 1];
+                for(int i = 0; i < tokens.Length - 1; ++i)
+                {
+                    new_tokens[i] = tokens[i + 1];
+                }
+                return new ReturnExpression() { ForReturn = Parse(new_tokens)[0] };
+            }
 
             List<IExpression> exprs_list = new List<IExpression>();
 

@@ -54,6 +54,8 @@ namespace BetterSimpleLang
                     return EvaluateLoopExpression((LoopExpression)expr, env);
                 case ExpressionKind.StructDeclaration:
                     return EvaluateStructDeclarationExpression((StructDeclarationExpression)expr, env);
+                case ExpressionKind.Return:
+                    return EvaluateReturnExpression((ReturnExpression)expr, env);
                 default:
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
@@ -329,7 +331,8 @@ namespace BetterSimpleLang
             {
                 foreach(var e in body)
                 {
-                    Evaluate(e, env);
+                    var r = Evaluate(e, env);
+                    if (e.Kind() == ExpressionKind.Return) return r;
                 }
             }
 
@@ -345,12 +348,18 @@ namespace BetterSimpleLang
             {
                 foreach (var e in body)
                 {
-                    Evaluate(e, env);
+                    var r = Evaluate(e, env);
+                    if (e.Kind() == ExpressionKind.Return) return r;
                 }
                 cond_ev = Evaluate(cond, env);
             }
 
             return Variable.NewEmpty();
+        }
+
+        public Variable EvaluateReturnExpression(ReturnExpression expr, Env env)
+        {
+            return Evaluate(expr.ForReturn, env);
         }
 
     }

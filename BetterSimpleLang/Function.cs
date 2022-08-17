@@ -180,7 +180,11 @@ namespace BetterSimpleLang
             foreach (var e in Body)
             {
                 r = evaluator.Evaluate(e, env);
-                if (e.Kind() == ExpressionKind.Return) result = r.Value;
+                if (e.Kind() == ExpressionKind.Return)
+                {
+                    result = r.Value;
+                    break;
+                }
             }
 
             Iterator<FunctionArgument> Args_it_new = new Iterator<FunctionArgument>(Args, n);

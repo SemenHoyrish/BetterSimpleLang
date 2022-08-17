@@ -99,6 +99,13 @@ namespace BetterSimpleLang
         public ExpressionKind Kind() => ExpressionKind.FuncExecution;
     }
 
+    public class ReturnExpression : IExpression
+    {
+        public IExpression ForReturn;
+
+        public ExpressionKind Kind() => ExpressionKind.Return;
+    }
+
     public class IfExpression : IExpression
     {
         public IExpression Condition;
