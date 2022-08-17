@@ -54,7 +54,7 @@ namespace BetterSimpleLang
             //                "sum = $test(2, 5) + $test(4, 6);";
             //"sum = $test(a, 5) + 3 * 2;";
 
-            string FILENAME = "test2_idea.bsl";
+            string FILENAME = "test5.bsl";
             if (args.Length == 1)
                 FILENAME = args[0];
 

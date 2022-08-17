@@ -36,6 +36,10 @@ namespace BetterSimpleLang
             Functions.Add(new Function("write_file", Boolean.Type, new FunctionArgument[] { new FunctionArgument("value", String.Type, false), new FunctionArgument("content", String.Type, false) }, new IExpression[0]));
 
             Functions.Add(new Function("concat_str", String.Type, new FunctionArgument[] { new FunctionArgument("str1", String.Type, false), new FunctionArgument("str2", String.Type, false) }, new IExpression[0]));
+            Functions.Add(new Function("split_str", Arr.Type, new FunctionArgument[] { new FunctionArgument("str", String.Type, false), new FunctionArgument("splitby", String.Type, false), new FunctionArgument("arr", Arr.Type, true) }, new IExpression[0]));
+
+            Functions.Add(new Function("system", Null.Type, new FunctionArgument[] { new FunctionArgument("file", String.Type, false) }, new IExpression[0]));
+            Functions.Add(new Function("sleep", Null.Type, new FunctionArgument[] { new FunctionArgument("ms", Integer.Type, false) }, new IExpression[0]));
 
             //Functions.Add(new Function("copy", Struct.Type, new FunctionArgument[] { new FunctionArgument("source", Struct.Type, false) }, new IExpression[0]));
 
@@ -43,8 +47,8 @@ namespace BetterSimpleLang
         }
 
         // TODO: Add GetVar GetFunc GetStruct methods;
-        // TODO: Add global vars;
-        // TODO: Make functions see only local vars;
+        // TODO: NO? Add global vars;
+        // TODO: NO? Make functions see only local vars;
 
         public Env(Env root)
         {

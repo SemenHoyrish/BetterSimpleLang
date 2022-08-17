@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace BetterSimpleLang
 {
@@ -93,7 +95,8 @@ namespace BetterSimpleLang
 
             if(new List<string>() { "printi", "printd", "prints", "printb" }.Contains(Name))
             {
-                Console.Write( env.Variables.First(a => a.Name == "value").Value.ToString().Replace("\\n", "\n") );
+                Console.Write(env.Variables.First(a => a.Name == "value").Value.ToString().Replace("\\n", "\n"));
+                //Console.Write( @env.Variables.First(a => a.Name == "value").Value.ToString() );
                 return r;
             }
 
@@ -165,6 +168,39 @@ namespace BetterSimpleLang
             if (Name == "concat_str")
             {
                 return new Variable("", String.Type, String.ParseValue(_args[0].Value) + String.ParseValue(_args[1].Value));
+            }
+            if (Name == "split_str")
+            {
+                var _r = new List<string>();
+                _r = ((string)_args[0].Value).Split((string)_args[1].Value).ToList();
+                var __r = new List<Variable>();
+                foreach(var s in _r)
+                {
+                    __r.Add(new Variable("", String.Type, s));
+                }
+                _args[2].Value = __r;
+                return Variable.NewEmpty();
+            }
+            if (Name == "system")
+            {
+                var file = env.Variables.FirstOrDefault(a => a.Name == "SYSTEM_FILE");
+                if (file == null) return Variable.NewEmpty();
+                var p = new Process
+                {
+                    StartInfo =
+                    {
+                         FileName = (string)file.Value,
+                         WorkingDirectory = ".",
+                         Arguments = "/c " + (string)_args[0].Value
+                    }
+                };
+                p.Start();
+                p.WaitForExit();
+                return Variable.NewEmpty();
+            }
+            if (Name == "sleep")
+            {
+                Thread.Sleep(Integer.ParseValue(_args[0].Value));
             }
 
             //if (Name == "clear")
