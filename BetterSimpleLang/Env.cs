@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace BetterSimpleLang
@@ -35,6 +36,30 @@ namespace BetterSimpleLang
             Functions.Add(new Function("write_file", Boolean.Type, new FunctionArgument[] { new FunctionArgument("value", String.Type, false), new FunctionArgument("content", String.Type, false) }, new IExpression[0]));
 
             Functions.Add(new Function("concat_str", String.Type, new FunctionArgument[] { new FunctionArgument("str1", String.Type, false), new FunctionArgument("str2", String.Type, false) }, new IExpression[0]));
+
+            //Functions.Add(new Function("copy", Struct.Type, new FunctionArgument[] { new FunctionArgument("source", Struct.Type, false) }, new IExpression[0]));
+        }
+
+        public Env(Env root)
+        {
+            var vars = new Variable[root.Variables.Count];
+            root.Variables.CopyTo(vars);
+            Variables = vars.ToList();
+
+            var funcs = new Function[root.Functions.Count];
+            root.Functions.CopyTo(funcs);
+            Functions = funcs.ToList();
+
+            var structs = new Structure[root.Structures.Count];
+            root.Structures.CopyTo(structs);
+            Structures = structs.ToList();
+
+            if (Variables == null)
+                Variables = new List<Variable>();
+            if (Functions == null)
+                Functions = new List<Function>();
+            if (Structures == null)
+                Structures = new List<Structure>();
         }
     }
 }

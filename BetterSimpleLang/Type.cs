@@ -1,9 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace BetterSimpleLang
 {
+    // Guid Type field;
+
+    public enum Type
+    {
+        Null,
+        Integer,
+        Boolean,
+        String,
+        Double,
+        
+        Arr,
+
+        Struct
+    }
+
     public interface IType
     {
         public static IType Type;
@@ -19,7 +35,8 @@ namespace BetterSimpleLang
 
     public class Null : IType<object>
     {
-        public static Null Type = new Null();
+        //public static Null Type = new Null();
+        public static Type Type = Type.Null;
 
         public static object DefaultValue() => null;
 
@@ -28,7 +45,8 @@ namespace BetterSimpleLang
 
     public class Integer : IType<int>
     {
-        public static Integer Type = new Integer();
+        //public static Integer Type = new Integer();
+        public static Type Type = Type.Integer;
 
         public static int ParseValue(object v)
         {
@@ -57,7 +75,7 @@ namespace BetterSimpleLang
 
     public class Boolean : IType<bool>
     {
-        public static Boolean Type = new Boolean();
+        public static Type Type = Type.Boolean;
 
         public static bool ParseValue(object v)
         {
@@ -86,7 +104,7 @@ namespace BetterSimpleLang
 
     public class String : IType<string>
     {
-        public static String Type = new String();
+        public static Type Type = Type.String;
 
         public static string ParseValue(object v)
         {
@@ -122,7 +140,7 @@ namespace BetterSimpleLang
 
     public class Double : IType<double>
     {
-        public static Double Type = new Double();
+        public static Type Type = Type.Double;
 
         public static double ParseValue(object v)
         {
@@ -161,9 +179,10 @@ namespace BetterSimpleLang
     public class Arr : IArr
     {
         private List<Variable> _list;
-        public static IType ItemType = Null.Type;
+        public static Type ItemType = Null.Type;
 
-        public static Arr Type = new Arr();
+        //public static Arr Type = new Arr();
+        public static Type Type = Type.Arr;
 
         public static List<Variable> ParseValue(object v)
         {
@@ -214,22 +233,22 @@ namespace BetterSimpleLang
 
     public class IntArr : Arr
     {
-        public static IType ItemType = Integer.Type;
+        public static Type ItemType = Integer.Type;
         //public static IntArr Type = new IntArr();
     }
     public class DoubleArr : Arr
     {
-        public static IType ItemType = Double.Type;
+        public static Type ItemType = Double.Type;
         //public static DoubleArr Type = new DoubleArr();
     }
     public class BoolArr : Arr
     {
-        public static IType ItemType = Boolean.Type;
+        public static Type ItemType = Boolean.Type;
         //public static BoolArr Type = new BoolArr();
     }
     public class StrArr : Arr
     {
-        public static IType ItemType = String.Type;
+        public static Type ItemType = String.Type;
         //public static StrArr Type = new StrArr();
     }
 
@@ -238,9 +257,23 @@ namespace BetterSimpleLang
     {
         public string Name;
 
-        //public static Struct Type = new Struct();
-
-        public static object DefaultValue() => null;
+        public static Type Type = Type.Struct;
+        
+        public static object DefaultValue(string typeName, Env env)
+        {
+            Structure st = env.Structures.First(a => a.Name == typeName);
+            List<Variable> vars = new List<Variable>();
+            foreach (var sf in st.Fields)
+            {
+                if (sf.Type == Arr.Type)
+                    vars.Add(new Variable(sf.Name, sf.Type, Arr.DefaultValue()));
+                else if (sf.Type == Struct.Type)
+                    vars.Add(new Variable(sf.Name, sf.Type, Struct.DefaultValue(sf.TypeName, env)));
+                else
+                    vars.Add(new Variable(sf.Name, sf.Type));
+            }
+            return vars;
+        }
 
         public static List<Variable> ParseValue(object v)
         {
@@ -251,7 +284,7 @@ namespace BetterSimpleLang
                 List<Variable> fields = (List<Variable>)v;
                 return fields;
             }
-            catch
+            catch (Exception e)
             {
                 // Report error
                 return null;

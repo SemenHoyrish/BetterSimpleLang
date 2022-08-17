@@ -9,10 +9,10 @@ namespace BetterSimpleLang
     public class FunctionArgument
     {
         public string Name;
-        public IType Type;
+        public Type Type;
         public bool IsReference;
 
-        public FunctionArgument(string name, IType type, bool isReference)
+        public FunctionArgument(string name, Type type, bool isReference)
         {
             Name = name;
             Type = type;
@@ -26,12 +26,12 @@ namespace BetterSimpleLang
     public class Function
     {
         public string Name;
-        public IType Type;
+        public Type Type;
         //public KeyValuePair<string, IType>[] Args;
         public FunctionArgument[] Args;
         public IExpression[] Body;
 
-        public Function(string name, IType type, FunctionArgument[] args, IExpression[] body)
+        public Function(string name, Type type, FunctionArgument[] args, IExpression[] body)
         {
             Name = name;
             Type = type;
@@ -39,11 +39,28 @@ namespace BetterSimpleLang
             Body = body;
         }
 
+        private List<Variable> GetCopyOfList(List<Variable> source)
+        {
+            List<Variable> new_list = new List<Variable>();
+            foreach(var i in source)
+            {
+                new_list.Add(i);
+            }
+            return new_list;
+        }
+
         public Variable Execute(Variable[] _args, Env root_env)
         {
             Variable[] args = new Variable[_args.Length];
-            for(int i = 0; i < _args.Length; i++)
-                args[i] = _args[i].Copy();
+            for (int i = 0; i < _args.Length; i++)
+            {
+                //if (typeof(Struct).IsInstanceOfType(Args[i].Type))
+                //{
+                //    args[i] = new Variable(_args[i].Name, _args[i].Type, GetCopyOfList((List<Variable>)_args[i].Value));
+                //}
+                //else
+                    args[i] = _args[i].Copy();
+            }
 
             Iterator<Variable> args_it = new Iterator<Variable>(args, null);
             var n = new FunctionArgument("", Null.Type, false);
@@ -60,12 +77,12 @@ namespace BetterSimpleLang
                 var a_c = args_it.Current();
 
                 //if (A_c.Key != a_c.Name || A_c.Value != a_c.Type) throw new Exception();
-                if (A_c.Type != a_c.Type) throw new Exception();
+                if (A_c.Type != a_c.Type && (typeof(Struct).IsInstanceOfType(A_c) != typeof(Struct).IsInstanceOfType(a_c))) throw new Exception();
                 a_c.Name = A_c.Name;
             }
             if (args_it.Next() != null) throw new Exception();
 
-            Env env = new Env();
+            Env env = new Env(root_env);
             env.Variables.AddRange(args);
 
             Evaluator evaluator = new Evaluator();
@@ -76,7 +93,7 @@ namespace BetterSimpleLang
 
             if(new List<string>() { "printi", "printd", "prints", "printb" }.Contains(Name))
             {
-                Console.Write( env.Variables[0].Value.ToString().Replace("\\n", "\n") );
+                Console.Write( env.Variables.First(a => a.Name == "value").Value.ToString().Replace("\\n", "\n") );
                 return r;
             }
 
@@ -150,6 +167,16 @@ namespace BetterSimpleLang
                 return new Variable("", String.Type, String.ParseValue(_args[0].Value) + String.ParseValue(_args[1].Value));
             }
 
+            //if (Name == "copy")
+            //{
+            //    if (_args[0].Type == Struct.Type)
+            //        return Variable.NewEmpty();
+
+
+
+            //    return new Variable(_args[0].Name, _args[0].Type, _args[0].Value);
+            //}
+
             foreach (var e in Body)
             {
                 r = evaluator.Evaluate(e, env);
@@ -157,13 +184,16 @@ namespace BetterSimpleLang
             }
 
             Iterator<FunctionArgument> Args_it_new = new Iterator<FunctionArgument>(Args, n);
+            int index = 0;
             while (Args_it_new.Next() != n)
             {
                 if(Args_it_new.Current().IsReference)
                 {
-                    root_env.Variables.First(a => a.Name == _args[Args_it_new.GetIndex()].Name).Value =
-                        env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
+                    //root_env.Variables.First(a => a.Name == _args[Args_it_new.GetIndex()].Name).Value =
+                    //    env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
+                    _args[index].Value = env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
                 }
+                index++;
             }
 
             // TODO: Change this to Parse Return Expression

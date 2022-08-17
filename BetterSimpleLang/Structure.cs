@@ -7,7 +7,8 @@ namespace BetterSimpleLang
     public class StructureField
     {
         public string Name;
-        public IType Type;
+        public Type Type;
+        public string TypeName;
     }
 
     // TODO: reference variables in structs

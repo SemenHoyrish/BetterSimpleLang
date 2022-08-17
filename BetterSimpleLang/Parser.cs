@@ -294,7 +294,7 @@ namespace BetterSimpleLang
                     }
                     open_cur--;
                 }
-                else if (cur == TokenKind.ColonColon)
+                else if (cur == TokenKind.ColonColon && body_parsed)
                 {
                     type = it.Next();
                     break;

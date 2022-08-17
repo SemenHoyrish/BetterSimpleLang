@@ -7,7 +7,7 @@ namespace BetterSimpleLang
 {
     public class Evaluator
     {
-        private Dictionary<string, IType> _types = new Dictionary<string, IType>()
+        private Dictionary<string, Type> _types = new Dictionary<string, Type>()
         {
             { "int", Integer.Type },
             { "bool", Boolean.Type },
@@ -21,14 +21,15 @@ namespace BetterSimpleLang
         };
 
 
-        private IType Type(string s, Env env)
+        private Type Type(string s, Env env)
         {
             if (_types.ContainsKey(s)) return _types[s];
-            else if (env.Structures.FirstOrDefault(a => a.Name == s) != null)
-            {
-                return new Struct() { Name = s };
-            }
-            return null;
+            else if (env.Structures.FirstOrDefault(a => a.Name == s) != null) return BetterSimpleLang.Type.Struct;
+            //else if (env.Structures.FirstOrDefault(a => a.Name == s) != null)
+            //{
+            //    return new Struct() { Name = s };
+            //}
+            return Null.Type;
         }
 
         public Variable Evaluate(IExpression expr, Env env)
@@ -99,12 +100,13 @@ namespace BetterSimpleLang
             Variable left = Evaluate(expr.Left, env);
             Variable right = Evaluate(expr.Right, env);
 
-            IType left_type = left.Type;
-            IType right_type = right.Type;
+            Type left_type = left.Type;
+            Type right_type = right.Type;
 
             if (op_kind == TokenKind.Arrow)
             {
-                return Struct.ParseValue(left.Value).First(a => a.Name == ((CalcExpression)expr.Right).Value.text);
+                var sss = Struct.ParseValue(left.Value);
+                return sss.First(a => a.Name == ((CalcExpression)expr.Right).Value.text);
             }
 
             //if (left.Type != Integer.Type || right.Type != Integer.Type)
@@ -114,7 +116,7 @@ namespace BetterSimpleLang
 
             // TODO: type checking for operations
 
-            if (left_type != right_type && (typeof(Struct).IsInstanceOfType(left) != typeof(Struct).IsInstanceOfType(right)))
+            if (left_type != right_type)
             {
                 // TODO: report error
                 throw new Exception();
@@ -192,9 +194,20 @@ namespace BetterSimpleLang
 
         public Variable EvaluateVarDeclarationExpression(VarDeclarationExpression expr, Env env)
         {
+            object default_value(Type t, string typeName)
+            {
+                if (t == Integer.Type) return Integer.DefaultValue();
+                if (t == Boolean.Type) return Boolean.DefaultValue();
+                if (t == String.Type) return String.DefaultValue();
+                if (t == Double.Type) return Double.DefaultValue();
+                if (t == Struct.Type) return Struct.DefaultValue(typeName, env);
+                if (t == Arr.Type) return Arr.DefaultValue();
+                return Null.DefaultValue();
+            }
+
             if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) == null)
             {
-                IType t = Null.Type;
+                Type t = Null.Type;
                 //switch (expr.Type.text)
                 //{
                 //    case "int":
@@ -204,13 +217,14 @@ namespace BetterSimpleLang
                 t = Type(expr.Type.text, env);
                 if (t == Arr.Type)
                     env.Variables.Add(new Variable(expr.Name.text, t, Arr.DefaultValue()));
-                else if (typeof(Struct).IsInstanceOfType(t))
+                else if (t == Struct.Type)
                 {
-                    Structure st = env.Structures.First(a => a.Name == ((Struct)t).Name);
+                    //Structure st = env.Structures.First(a => a.Name == ((Struct)t).Name);
+                    Structure st = env.Structures.First(a => a.Name == expr.Type.text);
                     List<Variable> vars = new List<Variable>();
                     foreach(var sf in st.Fields)
                     {
-                        vars.Add( new Variable(sf.Name, sf.Type) );
+                        vars.Add( new Variable(sf.Name, sf.Type, default_value(sf.Type, expr.Type.text)));
                     }
                     env.Variables.Add(new Variable(expr.Name.text, t, vars));
                 }
@@ -254,7 +268,7 @@ namespace BetterSimpleLang
                 List<StructureField> fields = new List<StructureField>();
                 foreach(var fe in expr.Fields)
                 {
-                    fields.Add( new StructureField() { Name = fe.Name.text, Type = Type(fe.Type.text, env) } );
+                    fields.Add( new StructureField() { Name = fe.Name.text, Type = Type(fe.Type.text, env), TypeName = fe.Type.text } );
                 }
                 env.Structures.Add( new Structure() { Name = expr.Name.text, Fields = fields.ToArray() } );
             }
