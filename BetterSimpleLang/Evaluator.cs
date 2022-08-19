@@ -24,7 +24,7 @@ namespace BetterSimpleLang
         private Type Type(string s, Env env)
         {
             if (_types.ContainsKey(s)) return _types[s];
-            else if (env.Structures.FirstOrDefault(a => a.Name == s) != null) return BetterSimpleLang.Type.Struct;
+            else if (env.GetStructure(s) != null) return BetterSimpleLang.Type.Struct;
             //else if (env.Structures.FirstOrDefault(a => a.Name == s) != null)
             //{
             //    return new Struct() { Name = s };
@@ -91,7 +91,7 @@ namespace BetterSimpleLang
                     return new Variable("", Boolean.Type, Boolean.ParseValue(expr.Value.text));
 
 
-                Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Value.text);
+                Variable v = env.GetVariable(expr.Value.text);
                 if (v == null)
                     return Variable.NewEmpty();
 
@@ -207,7 +207,7 @@ namespace BetterSimpleLang
                 return Null.DefaultValue();
             }
 
-            if (env.Variables.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            if (env.GetVariable(expr.Name.text) == null)
             {
                 Type t = Null.Type;
                 //switch (expr.Type.text)
@@ -222,7 +222,7 @@ namespace BetterSimpleLang
                 else if (t == Struct.Type)
                 {
                     //Structure st = env.Structures.First(a => a.Name == ((Struct)t).Name);
-                    Structure st = env.Structures.First(a => a.Name == expr.Type.text);
+                    Structure st = env.GetStructure(expr.Type.text);
                     List<Variable> vars = new List<Variable>();
                     foreach(var sf in st.Fields)
                     {
@@ -239,7 +239,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateVarSetExpression(VarSetExpression expr, Env env)
         {
-            Variable v = env.Variables.FirstOrDefault(a => a.Name == expr.Name.text);
+            Variable v = env.GetVariable(expr.Name.text);
             if (v != null)
             {
                 if (v.Type == Integer.Type)
@@ -265,7 +265,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateStructDeclarationExpression(StructDeclarationExpression expr, Env env)
         {
-            if (env.Structures.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            if (env.GetStructure(expr.Name.text) == null)
             {
                 List<StructureField> fields = new List<StructureField>();
                 foreach(var fe in expr.Fields)
@@ -280,7 +280,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateFuncDeclarationExpression(FuncDeclarationExpression expr, Env env)
         {
-            if (env.Functions.FirstOrDefault(a => a.Name == expr.Name.text) == null)
+            if (env.GetFunction(expr.Name.text) == null)
             {
                 List<FunctionArgument> args = new List<FunctionArgument>();
                 foreach (var e in expr.Args)
@@ -307,7 +307,7 @@ namespace BetterSimpleLang
 
         public Variable EvaluateFuncExecutionExpression(FuncExecutionExpression expr, Env env)
         {
-            Function f = env.Functions.FirstOrDefault(a => a.Name == expr.Name.text);
+            Function f = env.GetFunction(expr.Name.text);
             if (f != null)
             {
                 List<Variable> vars = new List<Variable>();

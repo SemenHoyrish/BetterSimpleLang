@@ -7,12 +7,14 @@ namespace BetterSimpleLang
 {
     public class Env
     {
+        public Env Root;
         public List<Variable> Variables;
         public List<Function> Functions;
         public List<Structure> Structures;
 
         public Env()
         {
+            Root = null;
             Variables = new List<Variable>();
             Functions = new List<Function>();
             Structures = new List<Structure>();
@@ -52,6 +54,12 @@ namespace BetterSimpleLang
 
         public Env(Env root)
         {
+            Root = root;
+            Variables = new List<Variable>();
+            Functions = new List<Function>();
+            Structures = new List<Structure>();
+
+            /*
             var vars = new Variable[root.Variables.Count];
             root.Variables.CopyTo(vars);
             Variables = vars.ToList();
@@ -70,6 +78,32 @@ namespace BetterSimpleLang
                 Functions = new List<Function>();
             if (Structures == null)
                 Structures = new List<Structure>();
+            */
         }
+
+        public Variable GetVariable(string name)
+        {
+            var r = Variables.FirstOrDefault(a => a.Name == name);
+            if (r == null && Root != null)
+                r = Root.GetVariable(name);
+            return r;
+        }
+
+        public Function GetFunction(string name)
+        {
+            var r = Functions.FirstOrDefault(a => a.Name == name);
+            if (r == null && Root != null)
+                r = Root.GetFunction(name);
+            return r;
+        }
+
+        public Structure GetStructure(string name)
+        {
+            var r = Structures.FirstOrDefault(a => a.Name == name);
+            if (r == null && Root != null)
+                r = Root.GetStructure(name);
+            return r;
+        }
+
     }
 }

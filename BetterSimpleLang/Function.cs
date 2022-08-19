@@ -95,7 +95,7 @@ namespace BetterSimpleLang
 
             if(new List<string>() { "printi", "printd", "prints", "printb" }.Contains(Name))
             {
-                Console.Write(env.Variables.First(a => a.Name == "value").Value.ToString().Replace("\\n", "\n"));
+                Console.Write(env.GetVariable("value").Value.ToString().Replace("\\n", "\n"));
                 //Console.Write( @env.Variables.First(a => a.Name == "value").Value.ToString() );
                 return r;
             }
@@ -183,7 +183,7 @@ namespace BetterSimpleLang
             }
             if (Name == "system")
             {
-                var file = env.Variables.FirstOrDefault(a => a.Name == "SYSTEM_FILE");
+                var file = env.GetVariable("SYSTEM_FILE");
                 if (file == null) return Variable.NewEmpty();
                 var p = new Process
                 {
@@ -237,7 +237,7 @@ namespace BetterSimpleLang
                 {
                     //root_env.Variables.First(a => a.Name == _args[Args_it_new.GetIndex()].Name).Value =
                     //    env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
-                    _args[index].Value = env.Variables.First(a => a.Name == Args_it_new.Current().Name).Value;
+                    _args[index].Value = env.GetVariable(Args_it_new.Current().Name).Value;
                 }
                 index++;
             }

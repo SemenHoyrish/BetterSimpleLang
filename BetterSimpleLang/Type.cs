@@ -261,7 +261,8 @@ namespace BetterSimpleLang
         
         public static object DefaultValue(string typeName, Env env)
         {
-            Structure st = env.Structures.First(a => a.Name == typeName);
+            //Structure st = env.Structures.First(a => a.Name == typeName);
+            Structure st = env.GetStructure(typeName);
             List<Variable> vars = new List<Variable>();
             foreach (var sf in st.Fields)
             {
