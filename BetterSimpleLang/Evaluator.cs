@@ -126,6 +126,10 @@ namespace BetterSimpleLang
 
             if (op_kind == TokenKind.Equals)
             {
+                if (left.IsConstant)
+                {
+                    Error.Variable_ChangeConstantValue(left.Name, expr.Line);
+                }
                 left.Value = right.Value;
                 return Variable.NewEmpty();
             }
@@ -231,7 +235,7 @@ namespace BetterSimpleLang
                     env.Variables.Add(new Variable(expr.Name.text, t, vars));
                 }
                 else
-                    env.Variables.Add(new Variable(expr.Name.text, t));
+                    env.Variables.Add(new Variable(expr.Name.text, t, expr.Value == null ? null : Evaluate(expr.Value, env).Value, expr.isConstant));
             }
 
             return Variable.NewEmpty();

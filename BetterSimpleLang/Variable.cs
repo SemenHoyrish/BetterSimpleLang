@@ -9,7 +9,23 @@ namespace BetterSimpleLang
     {
         public string Name;
         public Type Type;
-        public object Value;
+        private object _value;
+        public object Value
+        {
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                if (!IsConstant) _value = value;
+                else
+                {
+                    //Error.Variable_ChangeConstantValue(Name);
+                }
+            }
+        }
+        public bool IsConstant;
 
         public Variable(string name, Type type)
         {
@@ -22,6 +38,14 @@ namespace BetterSimpleLang
             Name = name;
             Type = type;
             Value = value;
+        }
+
+        public Variable(string name, Type type, object value, bool isConstant)
+        {
+            Name = name;
+            Type = type;
+            Value = value;
+            IsConstant = isConstant;
         }
 
         public override string ToString()
@@ -39,10 +63,10 @@ namespace BetterSimpleLang
                 {
                     new_vars.Add(v.Copy());
                 }
-                return new Variable(Name, Type, new_vars);
+                return new Variable(Name, Type, new_vars, IsConstant);
             }
 
-            return new Variable(Name, Type, Value);
+            return new Variable(Name, Type, Value, IsConstant);
         }
 
         public static Variable NewEmpty() => new Variable("", Null.Type);

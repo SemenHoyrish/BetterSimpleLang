@@ -126,5 +126,12 @@ namespace BetterSimpleLang
             System.Environment.Exit(-1);
         }
 
+        // VARIABLE
+        public static void Variable_ChangeConstantValue(string varName, int line)
+        {
+            Console.WriteLine($"Trying to change constant value of '{varName}' on line {line}");
+            System.Environment.Exit(-1);
+        }
+
     }
 }

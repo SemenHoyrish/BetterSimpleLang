@@ -64,7 +64,8 @@ namespace BetterSimpleLang
                 //    args[i] = new Variable(_args[i].Name, _args[i].Type, GetCopyOfList((List<Variable>)_args[i].Value));
                 //}
                 //else
-                    args[i] = _args[i].Copy();
+                args[i] = _args[i].Copy();
+                if (!Args[i].IsReference) args[i].IsConstant = false;
             }
 
             Iterator<Variable> args_it = new Iterator<Variable>(args, null);

@@ -211,7 +211,22 @@ namespace BetterSimpleLang
 
         public VarDeclarationExpression ParseVarDeclarationExpression(Token[] tokens)
         {
-            return new VarDeclarationExpression() { Name = tokens[1], Type = tokens[3], Line = tokens[0].Line };
+            int add = 0;
+            if (tokens[1].text == "const") add = 1;
+
+            IExpression value = null;
+            List<Token> tkns = new List<Token>();
+            if (tokens.Length > 4 + add && tokens[4 + add].kind == TokenKind.Equals)
+            {
+                for(int i = 5 + add; i < tokens.Length; ++i)
+                {
+                    tkns.Add(tokens[i]);
+                }
+                value = Parse(tkns.ToArray())[0];
+            }
+
+
+            return new VarDeclarationExpression() { Name = tokens[1 + add], Type = tokens[3 + add], Value = value, isConstant = add == 1, Line = tokens[0].Line };
         }
 
         public VarSetExpression ParseVarSetExpression(Token[] tokens)
