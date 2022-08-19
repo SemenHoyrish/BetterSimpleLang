@@ -206,6 +206,7 @@ namespace BetterSimpleLang
             if (Name == "sleep")
             {
                 Thread.Sleep(Integer.ParseValue(_args[0].Value));
+                return Variable.NewEmpty();
             }
 
             //if (Name == "clear")
