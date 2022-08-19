@@ -392,7 +392,7 @@ namespace BetterSimpleLang
                 }
                 if (it.Current().kind == TokenKind.CloseParenthesis)
                 {
-                    if (open_par > 0) ts.Add(it.Current());
+                    if (open_par > 1) ts.Add(it.Current());
                     open_par--;
                     continue;
                 }
