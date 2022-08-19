@@ -248,7 +248,8 @@ namespace BetterSimpleLang
 
             //if (result == null && r.Value != null)
             //    result = r.Value;
-            Error.Function_ReturnedNothing(Name, callLine);
+            if (result == null)
+                Error.Function_ReturnedNothing(Name, callLine);
 
             return new Variable("", Type, result);
         }

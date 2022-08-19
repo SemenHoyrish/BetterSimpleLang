@@ -52,25 +52,25 @@ namespace BetterSimpleLang
             }
 
             bool str = false;
-            bool ignore_line = false;
+            //bool ignore_line = false;
             while (next() != null)
             {
                 if (current() == Environment.NewLine.ToCharArray()[1])
                 {
-                    if (ignore_line) ignore_line = false;
+                    //if (ignore_line) ignore_line = false;
                     
                     line++;
                     column = 0;
-                    continue;
+                    //continue;
                 }
-                else if (current() == '/' && look_next() == '/')
-                {
-                    next();
-                    ignore_line = true;
-                }
-                else if (ignore_line) continue;
+                //else if (current() == '/' && look_next() == '/')
+                //{
+                //    next();
+                //    ignore_line = true;
+                //}
+                //else if (ignore_line) continue;
 
-                if (current() == '"')
+                else if (current() == '"')
                 {
                     str = !str;
                 }
