@@ -230,7 +230,7 @@ namespace BetterSimpleLang
                     List<Variable> vars = new List<Variable>();
                     foreach(var sf in st.Fields)
                     {
-                        vars.Add( new Variable(sf.Name, sf.Type, default_value(sf.Type, expr.Type.text)));
+                        vars.Add( new Variable(sf.Name, sf.Type, sf.Value == null ? default_value(sf.Type, expr.Type.text) : sf.Value, sf.IsConstant));
                     }
                     env.Variables.Add(new Variable(expr.Name.text, t, vars));
                 }
@@ -274,7 +274,7 @@ namespace BetterSimpleLang
                 List<StructureField> fields = new List<StructureField>();
                 foreach(var fe in expr.Fields)
                 {
-                    fields.Add( new StructureField() { Name = fe.Name.text, Type = Type(fe.Type.text, env), TypeName = fe.Type.text } );
+                    fields.Add( new StructureField() { Name = fe.Name.text, Type = Type(fe.Type.text, env), TypeName = fe.Type.text, IsConstant = fe.isConstant, Value = fe.Value == null ? null : Evaluate(fe.Value, env).Value } );
                 }
                 env.Structures.Add( new Structure() { Name = expr.Name.text, Fields = fields.ToArray() } );
             }

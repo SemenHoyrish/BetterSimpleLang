@@ -257,10 +257,27 @@ namespace BetterSimpleLang
             {
                 if (it.Current().kind != TokenKind.CloseCurlyBracket && it.Current().kind != TokenKind.Semicolon)
                 {
+                    bool isConst = false;
+                    if (it.Current().text == "const")
+                    {
+                        isConst = true;
+                        it.Next();
+                    }
                     Token field_type = it.Current();
                     it.Next();
                     Token field_name = it.Next();
-                    fields.Add(new StructFieldExpression() { Name = field_name, Type = field_type, Line = tokens[0].Line });
+
+                    List<Token> tkns = new List<Token>();
+                    if (it.LookNext() != null && it.LookNext().kind == TokenKind.Equals)
+                    {
+                        it.Next();
+                        while (it.LookNext() != null && it.LookNext().kind != TokenKind.Semicolon)
+                        {
+                            tkns.Add(it.Next());
+                        }
+                    }
+
+                    fields.Add(new StructFieldExpression() { Name = field_name, Type = field_type, isConstant = isConst, Value = tkns.Count > 0 ? Parse(tkns.ToArray())[0] : null, Line = tokens[0].Line });
                 }
             }
 

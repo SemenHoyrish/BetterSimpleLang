@@ -38,7 +38,7 @@ namespace BetterSimpleLang
         {
             if (_index < _data.Length - 1)
             {
-                _index++;
+                //_index++;
                 return _data[_index + 1];
             }
             return _NULL;

@@ -9,6 +9,8 @@ namespace BetterSimpleLang
         public string Name;
         public Type Type;
         public string TypeName;
+        public bool IsConstant;
+        public object Value;
     }
 
     // TODO: reference variables in structs

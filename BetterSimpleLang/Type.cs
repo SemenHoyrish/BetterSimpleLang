@@ -273,7 +273,7 @@ namespace BetterSimpleLang
                 else if (sf.Type == Struct.Type)
                     vars.Add(new Variable(sf.Name, sf.Type, Struct.DefaultValue(sf.TypeName, env)));
                 else
-                    vars.Add(new Variable(sf.Name, sf.Type));
+                    vars.Add(new Variable(sf.Name, sf.Type, sf.Value, sf.IsConstant));
             }
             return vars;
         }

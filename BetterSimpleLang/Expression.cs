@@ -83,6 +83,8 @@ namespace BetterSimpleLang
     {
         public Token Name;
         public Token Type;
+        public IExpression Value;
+        public bool isConstant = false;
 
         public int Line { get; set; }
 
