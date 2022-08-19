@@ -62,7 +62,7 @@ namespace BetterSimpleLang
             string input = "";
             foreach(var l in File.ReadAllLines(FILENAME))
             {
-                if (!l.Trim().StartsWith("//"))
+                //if (!l.Trim().StartsWith("//"))
                     input += l + '\n';
             }
             

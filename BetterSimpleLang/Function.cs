@@ -246,9 +246,9 @@ namespace BetterSimpleLang
                 index++;
             }
 
-            // TODO: Change this to Parse Return Expression
-            if (result == null && r.Value != null)
-                result = r.Value;
+            //if (result == null && r.Value != null)
+            //    result = r.Value;
+            Error.Function_ReturnedNothing(Name, callLine);
 
             return new Variable("", Type, result);
         }

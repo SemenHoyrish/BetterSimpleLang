@@ -120,5 +120,11 @@ namespace BetterSimpleLang
             System.Environment.Exit(-1);
         }
 
+        public static void Function_ReturnedNothing(string functionName, int line)
+        {
+            Console.WriteLine($"Function '{functionName}' returned nothing on line {line}");
+            System.Environment.Exit(-1);
+        }
+
     }
 }
