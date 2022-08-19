@@ -40,12 +40,16 @@ namespace BetterSimpleLang
     {
         public TokenKind kind;
         public string text;
+        public int Line;
+        public int Column;
 
         public Token() { }
-        public Token(TokenKind k, string t)
+        public Token(TokenKind k, string t, int line, int column)
         {
             kind = k;
             text = t;
+            Line = line;
+            Column = column;
         }
 
         public static List<TokenKind> OperatorsTokenKinds = new List<TokenKind>

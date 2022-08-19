@@ -64,7 +64,7 @@ namespace BetterSimpleLang
                             break;
                         //case var t when ts[0].text == "return":
                         //    expr = ParseFuncDeclarationExpression(ts.ToArray());
-                            break;
+                            //break;
                         case var t when ts[0].text == "while":
                             expr = ParseLoopExpression(ts.ToArray());
                             break;
@@ -97,7 +97,7 @@ namespace BetterSimpleLang
         public IExpression ParseCalcExpression(Token[] tokens)
         {
             if (tokens.Length == 1)
-                return new CalcExpression() { Value = tokens[0] };
+                return new CalcExpression() { Value = tokens[0], Line = tokens[0].Line };
 
             if (tokens[0].text == "return")
             {
@@ -106,7 +106,7 @@ namespace BetterSimpleLang
                 {
                     new_tokens[i] = tokens[i + 1];
                 }
-                return new ReturnExpression() { ForReturn = Parse(new_tokens)[0] };
+                return new ReturnExpression() { ForReturn = Parse(new_tokens)[0], Line = tokens[0].Line };
             }
 
             List<IExpression> exprs_list = new List<IExpression>();
@@ -124,7 +124,7 @@ namespace BetterSimpleLang
                 }
                 else
                 {
-                    exprs_list.Add(new CalcExpression() { Value = tokens[i] });
+                    exprs_list.Add(new CalcExpression() { Value = tokens[i], Line = tokens[0].Line });
                 }
                 if (tokens[i].kind == TokenKind.CloseParenthesis && func && open_par == 1)
                 {
@@ -170,7 +170,7 @@ namespace BetterSimpleLang
             for (int i = 0; i < sign_tokens.Count; i++)
             {
                 int ind = sign_tokens[i].Value[0];
-                CalcExpression expr = new CalcExpression();
+                CalcExpression expr = new CalcExpression() { Line = tokens[0].Line };
                 expr.Operator = ((CalcExpression)exprs[ind]).Value;
                 int k = 0;
                 while (is_token_used.Length > ind + k + 1 && is_token_used[ind + k + 1])
@@ -181,7 +181,7 @@ namespace BetterSimpleLang
                 else if (t.Kind() == ExpressionKind.FuncExecution)
                     expr.Right = t;
                 else
-                    expr.Right = new CalcExpression() { Value = ((CalcExpression)t).Value };
+                    expr.Right = new CalcExpression() { Value = ((CalcExpression)t).Value, Line = tokens[0].Line };
                 is_token_used[ind + k + 1] = true;
 
                 k = 0;
@@ -194,7 +194,7 @@ namespace BetterSimpleLang
                 else if (t.Kind() == ExpressionKind.FuncExecution)
                     expr.Left = t;
                 else
-                    expr.Left = new CalcExpression() { Value = ((CalcExpression)t).Value };
+                    expr.Left = new CalcExpression() { Value = ((CalcExpression)t).Value, Line = tokens[0].Line };
                 is_token_used[ind - k - 1] = true;
 
                 expressions[ind] = expr;
@@ -211,21 +211,21 @@ namespace BetterSimpleLang
 
         public VarDeclarationExpression ParseVarDeclarationExpression(Token[] tokens)
         {
-            return new VarDeclarationExpression() { Name = tokens[1], Type = tokens[3] };
+            return new VarDeclarationExpression() { Name = tokens[1], Type = tokens[3], Line = tokens[0].Line };
         }
 
         public VarSetExpression ParseVarSetExpression(Token[] tokens)
         {
             if (tokens.Length == 3)
-                return new VarSetExpression() { Name = tokens[0], Value = new CalcExpression() { Value = tokens[2] } };
+                return new VarSetExpression() { Name = tokens[0], Value = new CalcExpression() { Value = tokens[2], Line = tokens[0].Line }, Line = tokens[0].Line };
 
             List<Token> ts = new List<Token>();
             for (int i = 2; i < tokens.Length; i++)
             {
                 ts.Add(tokens[i]);
             }
-            ts.Add(new Token(TokenKind.Semicolon, ";"));
-            return new VarSetExpression() { Name = tokens[0], Value = Parse(ts.ToArray())[0] };
+            ts.Add(new Token(TokenKind.Semicolon, ";", 0, 0));
+            return new VarSetExpression() { Name = tokens[0], Value = Parse(ts.ToArray())[0], Line = tokens[0].Line };
         }
 
         public StructDeclarationExpression ParseStructDeclarationExpression(Token[] tokens)
@@ -245,11 +245,11 @@ namespace BetterSimpleLang
                     Token field_type = it.Current();
                     it.Next();
                     Token field_name = it.Next();
-                    fields.Add(new StructFieldExpression() { Name = field_name, Type = field_type });
+                    fields.Add(new StructFieldExpression() { Name = field_name, Type = field_type, Line = tokens[0].Line });
                 }
             }
 
-            return new StructDeclarationExpression() { Name = name, Fields = fields.ToArray() };
+            return new StructDeclarationExpression() { Name = name, Fields = fields.ToArray(), Line = tokens[0].Line };
         }
 
         public FuncDeclarationExpression ParseFuncDeclarationExpression(Token[] tokens)
@@ -324,7 +324,7 @@ namespace BetterSimpleLang
                         n = it.Next();
                     }
                     it.Next();
-                    args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n, IsReference = is_ref });
+                    args_list.Add(new FuncArgExpression() { Name = it.Next(), Type = n, IsReference = is_ref, Line = tokens[0].Line });
                 }
                 else if (body)
                 {
@@ -366,7 +366,7 @@ namespace BetterSimpleLang
                 //}
             }
 
-            return new FuncDeclarationExpression() { Name = name, Type = type, Args = args_list.ToArray(), Body = Parse(body_tokens.ToArray()) };
+            return new FuncDeclarationExpression() { Name = name, Type = type, Args = args_list.ToArray(), Body = Parse(body_tokens.ToArray()), Line = tokens[0].Line };
         }
 
         public FuncExecutionExpression ParseFuncExecutionExpression(Token[] tokens)
@@ -375,7 +375,7 @@ namespace BetterSimpleLang
             it.Next();
             Token name = it.Next();
 
-            FuncExecutionExpression e = new FuncExecutionExpression();
+            FuncExecutionExpression e = new FuncExecutionExpression() { Line = tokens[0].Line };
             e.Name = name;
 
             List<IExpression> exprs = new List<IExpression>();
@@ -446,7 +446,7 @@ namespace BetterSimpleLang
                         if (open_par == 1)
                         {
                             condition_parsed = true;
-                            condition_expr = Parse(condition.ToArray())[0];
+                            condition_expr = condition.Count > 0 ? Parse(condition.ToArray())[0] : null;
                         }
                         else
                         {
@@ -487,12 +487,12 @@ namespace BetterSimpleLang
                 }
             }
 
-            if (condition == null || body_exprs == null)
+            if (condition_expr == null || body_exprs == null)
             {
-                // TODO: Report Error
+                Error.Parser_ErrorWhileParsingIfExpression(tokens[0].Line);
             }
 
-            return new IfExpression() { Condition = condition_expr, Body = body_exprs };
+            return new IfExpression() { Condition = condition_expr, Body = body_exprs, Line = tokens[0].Line };
         }
 
         public LoopExpression ParseLoopExpression(Token[] tokens)
@@ -527,7 +527,7 @@ namespace BetterSimpleLang
                         if (open_par == 1)
                         {
                             condition_parsed = true;
-                            condition_expr = Parse(condition.ToArray())[0];
+                            condition_expr = condition.Count > 0 ? Parse(condition.ToArray())[0] : null;
                         }
                         else
                         {
@@ -568,12 +568,12 @@ namespace BetterSimpleLang
                 }
             }
 
-            if (condition == null || body_exprs == null)
+            if (condition_expr == null || body_exprs == null)
             {
-                // TODO: Report Error
+                Error.Parser_ErrorWhileParsingLoopExpression(tokens[0].Line);
             }
 
-            return new LoopExpression() { Condition = condition_expr, Body = body_exprs };
+            return new LoopExpression() { Condition = condition_expr, Body = body_exprs, Line = tokens[0].Line };
         }
     }
 }

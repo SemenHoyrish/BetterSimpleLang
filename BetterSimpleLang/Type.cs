@@ -50,8 +50,7 @@ namespace BetterSimpleLang
 
         public static int ParseValue(object v)
         {
-            // Report error
-            if (v == null) return 0;
+            if (v == null) Error.Type_IncorrectValueToParseInteger(v);
             try
             {
                 return (int)v;
@@ -64,7 +63,7 @@ namespace BetterSimpleLang
                 }
                 catch
                 {
-                    // Report error
+                    Error.Type_IncorrectValueToParseInteger(v);
                     return 0;
                 }
             }
@@ -79,8 +78,7 @@ namespace BetterSimpleLang
 
         public static bool ParseValue(object v)
         {
-            // Report error
-            if (v == null) return false;
+            if (v == null) Error.Type_IncorrectValueToParseBoolean(v);
             try
             {
                 return (bool)v;
@@ -93,7 +91,7 @@ namespace BetterSimpleLang
                 }
                 catch
                 {
-                    // Report error
+                    Error.Type_IncorrectValueToParseBoolean(v);
                     return false;
                 }
             }
@@ -108,8 +106,7 @@ namespace BetterSimpleLang
 
         public static string ParseValue(object v)
         {
-            // Report error
-            if (v == null) return "";
+            if (v == null) Error.Type_IncorrectValueToParseString(v);
             try
             {
                 return (string)v;
@@ -128,8 +125,15 @@ namespace BetterSimpleLang
                     }
                     catch
                     {
-                        // Report error
-                        return "";
+                        try
+                        {
+                            return ((double)v).ToString();
+                        }
+                        catch
+                        {
+                            Error.Type_IncorrectValueToParseString(v);
+                            return "";
+                        }
                     }
                 }
             }
@@ -144,8 +148,7 @@ namespace BetterSimpleLang
 
         public static double ParseValue(object v)
         {
-            // Report error
-            if (v == null) return 0;
+            if (v == null) Error.Type_IncorrectValueToParseDouble(v);
             try
             {
                 return (double)v;
@@ -158,7 +161,7 @@ namespace BetterSimpleLang
                 }
                 catch
                 {
-                    // Report error
+                    Error.Type_IncorrectValueToParseDouble(v);
                     return 0;
                 }
             }
@@ -186,15 +189,14 @@ namespace BetterSimpleLang
 
         public static List<Variable> ParseValue(object v)
         {
-            // Report error
-            if (v == null) return null;
+            if (v == null) Error.Type_IncorrectValueToParseArray(v);
             try
             {
                 return (List<Variable>)v;
             }
             catch
             {
-                // Report error
+                Error.Type_IncorrectValueToParseArray(v);
                 return null;
             }
         }
@@ -278,8 +280,7 @@ namespace BetterSimpleLang
 
         public static List<Variable> ParseValue(object v)
         {
-            // Report error
-            if (v == null) return null;
+            if (v == null) Error.Type_IncorrectValueToParseStruct(v);
             try
             {
                 List<Variable> fields = (List<Variable>)v;
@@ -287,7 +288,7 @@ namespace BetterSimpleLang
             }
             catch (Exception e)
             {
-                // Report error
+                Error.Type_IncorrectValueToParseStruct(v);
                 return null;
             }
         }

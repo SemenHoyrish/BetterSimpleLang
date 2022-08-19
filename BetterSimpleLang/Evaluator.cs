@@ -57,6 +57,7 @@ namespace BetterSimpleLang
                 case ExpressionKind.Return:
                     return EvaluateReturnExpression((ReturnExpression)expr, env);
                 default:
+                    Error.Evaluator_UnexpectedExpressionKind(expr.Kind(), expr.Line);
                     throw new Exception("Unexpected expression kind '" + expr.Kind() + "'");
             }
         }
@@ -120,8 +121,7 @@ namespace BetterSimpleLang
 
             if (left_type != right_type)
             {
-                // TODO: report error
-                throw new Exception();
+                Error.Evaluator_DifferentTypes(left_type, right_type, expr.Line);
             }
 
             if (op_kind == TokenKind.Equals)
@@ -148,8 +148,8 @@ namespace BetterSimpleLang
                     case TokenKind.Less:
                         return new Variable("", Boolean.Type, Integer.ParseValue(left.Value) < Integer.ParseValue(right.Value));
                     default:
-                        // TODO: Report Error
-                        throw new Exception();
+                        Error.Evaluator_UnexpectedOperatorForInteger(op_kind, expr.Line);
+                        break;
                 }
             else if (left_type == Double.Type)
                 switch (op_kind)
@@ -169,8 +169,8 @@ namespace BetterSimpleLang
                     case TokenKind.Less:
                         return new Variable("", Boolean.Type, Double.ParseValue(left.Value) < Double.ParseValue(right.Value));
                     default:
-                        // TODO: Report Error
-                        throw new Exception();
+                        Error.Evaluator_UnexpectedOperatorForDouble(op_kind, expr.Line);
+                        break;
                 }
             else if (left_type == Boolean.Type)
                 switch (op_kind)
@@ -178,8 +178,8 @@ namespace BetterSimpleLang
                     case TokenKind.EqualsEquals:
                         return new Variable("", Boolean.Type, Boolean.ParseValue(left.Value) == Boolean.ParseValue(right.Value));
                     default:
-                        // TODO: Report Error
-                        throw new Exception();
+                        Error.Evaluator_UnexpectedOperatorForBoolean(op_kind, expr.Line);
+                        break;
                 }
             else if (left_type == String.Type)
                 switch (op_kind)
@@ -187,8 +187,8 @@ namespace BetterSimpleLang
                     case TokenKind.EqualsEquals:
                         return new Variable("", Boolean.Type, String.ParseValue(left.Value) == String.ParseValue(right.Value));
                     default:
-                        // TODO: Report Error
-                        throw new Exception();
+                        Error.Evaluator_UnexpectedOperatorForString(op_kind, expr.Line);
+                        break;
                 }
 
             return new Variable("", Null.Type);
@@ -316,7 +316,7 @@ namespace BetterSimpleLang
                     var ttt = e.Kind();
                     vars.Add(Evaluate(e, env));
                 }
-                return f.Execute(vars.ToArray(), env);
+                return f.Execute(vars.ToArray(), env, expr.Line);
             }
 
             return Variable.NewEmpty();

@@ -51,8 +51,11 @@ namespace BetterSimpleLang
             return new_list;
         }
 
-        public Variable Execute(Variable[] _args, Env root_env)
+        public Variable Execute(Variable[] _args, Env root_env, int callLine)
         {
+            if (_args.Length < Args.Length)
+                Error.Function_NotEnoughArguments(Name, Args.Length, _args.Length, callLine);
+
             Variable[] args = new Variable[_args.Length];
             for (int i = 0; i < _args.Length; i++)
             {
@@ -79,10 +82,11 @@ namespace BetterSimpleLang
                 var a_c = args_it.Current();
 
                 //if (A_c.Key != a_c.Name || A_c.Value != a_c.Type) throw new Exception();
-                if (A_c.Type != a_c.Type && (typeof(Struct).IsInstanceOfType(A_c) != typeof(Struct).IsInstanceOfType(a_c))) throw new Exception();
+                //if (A_c.Type != a_c.Type && (typeof(Struct).IsInstanceOfType(A_c) != typeof(Struct).IsInstanceOfType(a_c))) throw new Exception();
+                if (A_c.Type != a_c.Type) Error.Function_WrongTypeForArgument(Name, A_c.Type, a_c.Type, callLine);
                 a_c.Name = A_c.Name;
             }
-            if (args_it.Next() != null) throw new Exception();
+            if (args_it.Next() != null) Error.Function_TooManyArguments(Name, Args.Length, args.Length, callLine);
 
             Env env = new Env(root_env);
             env.Variables.AddRange(args);

@@ -21,8 +21,23 @@ namespace BetterSimpleLang
 
     public interface IExpression
     {
+        public int Line { get; set; }
+
         public ExpressionKind Kind();
     }
+
+    //public class Expression : IExpression
+    //{
+    //    public int Line = 0;
+
+    //    public Expression(int line)
+    //    {
+    //        Line = line;
+    //    }
+
+    //    public ExpressionKind Kind() =>
+    //        throw new NotImplementedException();
+    //}
 
     public class CalcExpression : IExpression
     {
@@ -33,6 +48,8 @@ namespace BetterSimpleLang
         //public Token Value;
         public Token Value;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.Calc;
     }
 
@@ -42,6 +59,8 @@ namespace BetterSimpleLang
         public Token Name;
         public Token Type;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.VarDeclaration;
     }
 
@@ -50,6 +69,8 @@ namespace BetterSimpleLang
 
         public Token Name;
         public IExpression Value;
+
+        public int Line { get; set; }
 
         public ExpressionKind Kind() => ExpressionKind.VarSet;
     }
@@ -61,6 +82,8 @@ namespace BetterSimpleLang
         public Token Name;
         public Token Type;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.StructField;
     }
 
@@ -68,6 +91,8 @@ namespace BetterSimpleLang
     {
         public Token Name;
         public StructFieldExpression[] Fields;
+
+        public int Line { get; set; }
 
         public ExpressionKind Kind() => ExpressionKind.StructDeclaration;
     }
@@ -77,6 +102,8 @@ namespace BetterSimpleLang
         public Token Type;
         public Token Name;
         public bool IsReference;
+
+        public int Line { get; set; }
 
         public ExpressionKind Kind() => ExpressionKind.FuncArg;
     }
@@ -88,6 +115,8 @@ namespace BetterSimpleLang
         public IExpression[] Body;
         public Token Type;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.FuncDeclaration;
     }
 
@@ -96,12 +125,16 @@ namespace BetterSimpleLang
         public Token Name;
         public IExpression[] Args;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.FuncExecution;
     }
 
     public class ReturnExpression : IExpression
     {
         public IExpression ForReturn;
+
+        public int Line { get; set; }
 
         public ExpressionKind Kind() => ExpressionKind.Return;
     }
@@ -111,6 +144,8 @@ namespace BetterSimpleLang
         public IExpression Condition;
         public IExpression[] Body;
 
+        public int Line { get; set; }
+
         public ExpressionKind Kind() => ExpressionKind.If;
     }
 
@@ -118,6 +153,8 @@ namespace BetterSimpleLang
     {
         public IExpression Condition;
         public IExpression[] Body;
+
+        public int Line { get; set; }
 
         public ExpressionKind Kind() => ExpressionKind.Loop;
     }
